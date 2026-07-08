@@ -1,4 +1,131 @@
 
+"use client";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+// TODO sécurité : idéalement, sortir ces valeurs en variables d'environnement
+// (process.env.REACT_APP_SUPABASE_URL / _ANON_KEY ou import.meta.env selon le bundler)
+// plutôt que de les coder en dur, même si la clé "anon" est publique par design.
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tcakgvztbvtisgegqxch.supabase.co";
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjYWtndnp0YnZ0aXNnZWdxeGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwOTUxNTYsImV4cCI6MjA5ODY3MTE1Nn0.m4s9IDcr0OBlkGSWJ-JmfWC22iHl4oioodi1QjYbQ88";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Logo utilisé dans la facture évènement (style carton d'invitation).
+// NOTE: c'est la SEULE déclaration de cette constante — l'original contenait un
+// doublon (deux `const FAKHAMA_LOGO_BASE64 = ...`) qui aurait empêché la compilation.
+const FAKHAMA_LOGO_BASE64 = "data:image/png;base64,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";
+
+// ── DB <-> APP FIELD MAPPING ────────────────────────────────────────────────────
+const bookingToRow = (b) => ({
+  id: b.id,
+  client: b.client,
+  phone: b.phone || null,
+  date: b.date,
+  heure: b.heure,
+  retour: !!b.retour,
+  paiement: b.paiement,
+  avance: Number(b.avance) || 0,
+  reste: Number(b.reste) || 0,
+  lieu_marie: b.lieuMarie || null,
+  lieu_mariee: b.lieuMariee || null,
+  salle_fetes: b.salleFetes || null,
+  lieu_retour: b.lieuRetour || null,
+  lieu_shooting: b.lieuShooting || null,
+  decoration: b.decoration || "rubans",
+  commentaires: b.commentaires || null,
+  shooting: !!b.shooting,
+  shooting_heures: Number(b.shootingHeures) || 0,
+  shooting_cost: Number(b.shootingCost) || 0,
+  distance: Number(b.distance) || 0,
+  prix_base: Number(b.prixBase) || 0,
+  prix: Number(b.prix) || 0,
+  trajet_stops: b.trajetStops || [],
+  trajet: b.trajet || "",
+});
+
+const rowToBooking = (r) => ({
+  id: r.id,
+  client: r.client,
+  phone: r.phone || "",
+  date: r.date,
+  heure: r.heure,
+  retour: r.retour,
+  paiement: r.paiement,
+  avance: r.avance,
+  reste: r.reste,
+  lieuMarie: r.lieu_marie || "",
+  lieuMariee: r.lieu_mariee || "",
+  salleFetes: r.salle_fetes || "",
+  lieuRetour: r.lieu_retour || "",
+  lieuShooting: r.lieu_shooting || "",
+  decoration: r.decoration || "rubans",
+  commentaires: r.commentaires || "",
+  shooting: r.shooting,
+  shootingHeures: r.shooting_heures,
+  shootingCost: r.shooting_cost,
+  distance: r.distance,
+  prixBase: r.prix_base,
+  prix: r.prix,
+  trajetStops: r.trajet_stops || [],
+  trajet: r.trajet || "",
+});
+
+const maintenanceToRow = (m) => ({
+  id: m.id, date: m.date, kilometrage: m.kilometrage, type: m.type,
+  description: m.description || null, cout: m.cout,
+});
+const rowToMaintenance = (r) => ({ ...r });
+
+const assuranceToRow = (a) => ({
+  id: a.id, date_debut: a.dateDebut, date_fin: a.dateFin,
+  compagnie: a.compagnie, cout: a.cout, numero_contrat: a.numeroContrat || null,
+});
+const rowToAssurance = (r) => ({
+  id: r.id, dateDebut: r.date_debut, dateFin: r.date_fin,
+  compagnie: r.compagnie, cout: r.cout, numeroContrat: r.numero_contrat || "",
+});
+
+const vignetteToRow = (v) => ({ id: v.id, annee: v.annee, cout: v.cout, date_paiement: v.datePaiement });
+const rowToVignette = (r) => ({ id: r.id, annee: r.annee, cout: r.cout, datePaiement: r.date_paiement });
+
+const carburantToRow = (c) => ({
+  id: c.id, date: c.date, quantite: c.quantite, prix_litre: c.prixLitre,
+  kilometrage: c.kilometrage, station: c.station || null, cout_total: c.coutTotal,
+});
+const rowToCarburant = (r) => ({
+  id: r.id, date: r.date, quantite: r.quantite, prixLitre: r.prix_litre,
+  kilometrage: r.kilometrage, station: r.station || "", coutTotal: r.cout_total,
+});
+
+// ── CONSTANTS ──────────────────────────────────────────────────────────────────
+const CITY_NAMES = ["Tunis", "Sousse", "Monastir", "Sfax", "Mahdia", "Bizerte", "Nabeul", "Beja", "Zaghouan"];
+const PRIX_BASE_EVENEMENT = 350;
+const PRIX_PAR_KM_NORMAL = 2.1;
+const PRIX_PAR_KM_REDUIT = 1.7;
+const SUPPLEMENT_RETOUR = 100;
+const PRIX_SHOOTING_HEURE = 50;
+const RESERVATION_TARGET_MENSUEL = 6; // objectif de réservations par mois, modifiable
+const ACOMPTE_PERCENTAGE = 0.3; // 30% à la réservation, 70% avant l'événement
+
+// Statuts de paiement, y compris "En attente" = devis envoyé, pas encore confirmé.
+const PAIEMENT_STATUSES = ["En attente", "Payé", "Avance", "Non payé"];
+
+const DECORATION_OPTIONS = [
+  { value: "rubans", label: "Rubans traditionnels" },
+  { value: "fleurs", label: "Fleurs fraîches" },
+  { value: "mixte", label: "Mixte rubans et fleurs" }
+];
+
+const maintenancePlan = [
+  { kilometrage: 10000, type: "Vidange", description: "Vidange d'huile moteur, Remplacement filtre à air et filtre à huile" },
+  { kilometrage: 20000, type: "Filtres", description: "Filtre d'habitacle" },
+  { kilometrage: 80000, type: "Distribution", description: "Contrôle courroie de distribution" },
+  { kilometrage: 100000, type: "Révision", description: "Révision générale complète" },
+];
+
 const cityCoords = {
   Tunis: [36.8065, 10.1815],
   Sousse: [35.8256, 10.6084],
