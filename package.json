@@ -1,5 +1,5 @@
 {
-  "name": "bmw-app",
+  "name": "fakhama-weddings",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,13 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8",
-    "next": "^16.2.10",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "sweetalert2": "^11.26.24"
   },
   "devDependencies": {
