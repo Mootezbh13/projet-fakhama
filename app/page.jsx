@@ -2076,7 +2076,10 @@ const generateFactureHTML = (booking) => {
     const statusColor = statusColors[booking.paiement] || statusColors["Non payé"];
 
     const accentMain = "#3d2f1c";
-    const accentDivider = "#c9b98c";
+    const accentSoft = "#a68b4a";
+    const accentBg = "#f9f5ea";
+    const accentDivider = "#c6a869";
+    const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
     const totalValue = booking.reste || 0;
 
@@ -2092,6 +2095,83 @@ const generateFactureHTML = (booking) => {
           Propreté : une pénalité de 100 DT s'applique en cas de salissures importantes constatées.
         </div>`;
 
+    // ── Bordure ornementale (resserrée vers l'extérieur pour libérer le centre) ──
+    const cornerOrnament = `
+      <g class="corner-shape">
+        <path d="M10,10 C42,13 68,34 76,72 C56,64 22,49 10,10 Z"/>
+        <path d="M10,10 C25,30 47,40 80,44 C58,25 37,14 10,10 Z"/>
+        <path d="M16,23 C35,33 49,52 52,76 C35,68 18,54 16,23 Z"/>
+        <circle cx="70" cy="70" r="17"/>
+        <circle cx="60" cy="60" r="10"/>
+        <circle cx="80" cy="63" r="9"/>
+        <circle cx="61" cy="80" r="9"/>
+        <circle cx="82" cy="80" r="8"/>
+        <circle cx="46" cy="46" r="6"/>
+      </g>`;
+
+    const leafUnit = (variant) => `
+      <g class="vine-leaf">
+        <path d="M0,0 C9,-12 22,-12 29,0 C22,12 9,12 0,0 Z" transform="scale(${variant % 2 === 0 ? 1 : 0.82})"/>
+        <circle cx="14.5" cy="0" r="2.6" transform="scale(${variant % 2 === 0 ? 1 : 0.82})"/>
+      </g>`;
+
+    const buildHorizontalVine = (yPos, xStart, xEnd, count) => {
+      const step = (xEnd - xStart) / (count - 1);
+      let out = "";
+      for (let i = 0; i < count; i++) {
+        const x = xStart + step * i;
+        const rot = i % 2 === 0 ? 0 : 180;
+        out += `<g transform="translate(${x},${yPos}) rotate(${rot})">${leafUnit(i)}</g>`;
+      }
+      return out;
+    };
+
+    const buildVerticalVine = (xPos, yStart, yEnd, count) => {
+      const step = (yEnd - yStart) / (count - 1);
+      let out = "";
+      for (let i = 0; i < count; i++) {
+        const y = yStart + step * i;
+        const rot = i % 2 === 0 ? 90 : 270;
+        out += `<g transform="translate(${xPos},${y}) rotate(${rot})">${leafUnit(i)}</g>`;
+      }
+      return out;
+    };
+
+    // Viewbox calé sur le ratio A4 (1 : 1.4142). Bordure ramenée près du bord
+    // extérieur (16px) pour dégager un maximum d'espace utile au centre.
+    const VB_W = 1000;
+    const VB_H = 1414;
+    const CORNER = 150;
+
+    const borderFrameSVG = `
+      <svg class="frame-svg" viewBox="0 0 ${VB_W} ${VB_H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <style>
+            .corner-shape path, .corner-shape circle,
+            .vine-leaf path, .vine-leaf circle { fill: ${accentBg}; }
+          </style>
+        </defs>
+
+        <!-- double liseré, resserré près du bord -->
+        <rect x="16" y="16" width="${VB_W - 32}" height="${VB_H - 32}" fill="none" stroke="${accentDivider}" stroke-width="2"/>
+        <rect x="27" y="27" width="${VB_W - 54}" height="${VB_H - 54}" fill="none" stroke="${accentDivider}" stroke-width="1"/>
+
+        <!-- vigne continue -->
+        <g opacity="0.95">
+          ${buildHorizontalVine(31, CORNER + 20, VB_W - CORNER - 20, 8)}
+          ${buildHorizontalVine(VB_H - 31, CORNER + 20, VB_W - CORNER - 20, 8)}
+          ${buildVerticalVine(31, CORNER + 20, VB_H - CORNER - 20, 11)}
+          ${buildVerticalVine(VB_W - 31, CORNER + 20, VB_H - CORNER - 20, 11)}
+        </g>
+
+        <!-- bouquets de coins -->
+        <g transform="translate(4,4) scale(1.05)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 4},4) scale(-1.05,1.05)">${cornerOrnament}</g>
+        <g transform="translate(4,${VB_H - 4}) scale(1.05,-1.05)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 4},${VB_H - 4}) scale(-1.05,-1.05)">${cornerOrnament}</g>
+      </svg>
+    `;
+
     const factureHTML = `
       <!DOCTYPE html>
       <html>
@@ -2099,13 +2179,13 @@ const generateFactureHTML = (booking) => {
         <meta charset="UTF-8">
         <title>Facture Fakhama Weddings - ${booking.client}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Great+Vibes&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Great+Vibes&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
         <style>
           * { box-sizing: border-box; }
           @page { size: A4; margin: 0; }
           html { background: #cfc4a8; }
           body {
-            font-family: \'Cormorant Garamond\', serif;
+            font-family: 'Cormorant Garamond', serif;
             margin: 0;
             padding: 10mm 0;
             background: #cfc4a8;
@@ -2113,68 +2193,67 @@ const generateFactureHTML = (booking) => {
             display: flex;
             justify-content: center;
           }
-
-          /* ── Page A4 avec le cadre image fourni en fond plein-page ── */
           .page {
             position: relative;
             width: 210mm;
             height: 297mm;
-            background-color: #fdfaf2;
-            background-image: url(\'${FAKHAMA_FRAME_BASE64}\');
-            background-size: 100% 100%;
-            background-position: center;
-            background-repeat: no-repeat;
+            background: ${accentBg};
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             overflow: hidden;
             flex-shrink: 0;
           }
+          .frame-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+          }
 
-          /* Zone de contenu : repoussée à l\'intérieur du cadre par un padding
-             généreux (le cadre décoratif de l\'image occupe ~14% des bords),
-             de sorte que rien — notamment le logo — ne touche le motif. */
+          /* Zone de contenu bien dégagée de la bordure : marges généreuses */
           .content {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 34mm; left: 30mm; right: 30mm; bottom: 30mm;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 44mm 34mm;
+            overflow: hidden;
           }
           .content-inner {
             text-align: center;
-            max-width: 122mm;
+            width: 100%;
+            max-width: 150mm;
           }
 
           .brandline {
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 9.5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 0 0 6px;
+            margin: 0 0 8px;
           }
           .logo {
             display: block;
-            max-width: 56mm;
+            max-width: 68mm;
             width: 100%;
             height: auto;
-            margin: 0 auto 12px;
+            margin: 0 auto 14px;
           }
           .intro {
-            font-size: 13.5px;
+            font-size: 15px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #6b5c3f;
             line-height: 1.8;
-            margin: 16px 0 6px;
+            margin: 18px 0 8px;
             font-weight: 500;
           }
 
           .clientname {
-            font-family: \'Great Vibes\', cursive;
-            font-size: 40px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 46px;
             color: ${accentMain};
-            margin: 6px 0 16px;
+            margin: 6px 0 20px;
             line-height: 1;
             word-break: break-word;
           }
@@ -2183,154 +2262,162 @@ const generateFactureHTML = (booking) => {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
-            margin: 12px 0 4px;
+            gap: 14px;
+            margin: 16px 0 6px;
           }
           .datewrap .dpart {
-            font-size: 15px;
+            font-size: 17px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #4a3f30;
           }
-          .datewrap .ddim { font-size: 21px; font-weight: 500; }
-          .datewrap .bar { width: 1px; height: 20px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 24px; font-weight: 600; }
+          .datewrap .bar { width: 1px; height: 22px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 11px;
+            font-size: 13px;
             letter-spacing: 1.2px;
             text-transform: uppercase;
             color: #7a6f56;
-            margin: 8px 0 16px;
+            margin: 8px 0 22px;
           }
 
           .divider {
-            width: 100px;
+            width: 110px;
             height: 1px;
-            margin: 14px auto;
+            margin: 18px auto;
             background: linear-gradient(90deg, transparent, ${accentDivider}, transparent);
           }
 
           .block-label {
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 9px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10.5px;
             letter-spacing: 2.5px;
             text-transform: uppercase;
             color: #9c7f3f;
-            margin: 0 0 6px;
+            margin: 0 0 7px;
+            font-weight: 600;
           }
           .block-value {
-            font-size: 14.5px;
+            font-size: 16.5px;
             color: #3d2f1c;
             line-height: 1.5;
             margin: 0 0 4px;
           }
-          .block-value.small { font-size: 12.5px; color: #6b5c3f; }
+          .block-value.small { font-size: 14.5px; color: #6b5c3f; }
 
           .infogrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px 8px;
-            margin: 4px 0 6px;
+            gap: 16px 10px;
+            margin: 4px 0 8px;
             text-align: center;
+          }
+
+          .rsvp-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: 30px;
+            color: ${accentMain};
+            margin: 4px 0 12px;
           }
 
           .price-line {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 10px;
+            font-size: 15px;
             color: #5c5140;
-            padding: 4px 0;
+            padding: 5px 0;
           }
-          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; color: #8a7a52; align-self: center; }
+          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 12px; color: #8a7a52; align-self: center; font-weight: 500; }
           .price-total {
-            font-size: 20px;
+            font-size: 22px;
             color: ${accentMain};
-            margin: 10px 0 2px;
+            margin: 14px 0 4px;
             font-weight: 600;
           }
           .status-pill {
             display: inline-block;
             margin-top: 8px;
-            padding: 3px 14px;
+            padding: 4px 16px;
             border-radius: 20px;
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 9.5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10.5px;
             letter-spacing: 1.4px;
             text-transform: uppercase;
-            font-weight: 500;
+            font-weight: 600;
           }
 
           .terms {
-            margin-top: 16px;
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 8px;
-            line-height: 1.6;
-            color: #8a7a5c;
+            margin-top: 22px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9.5px;
+            line-height: 1.75;
+            color: #7c6b4c;
             text-align: left;
-            padding: 10px 12px;
-            background: rgba(239,231,212,0.85);
+            padding: 14px 16px;
+            background: #efe7d4;
             border: 1px dashed ${accentDivider};
           }
           .terms strong {
             display: block;
             letter-spacing: 1.8px;
             text-transform: uppercase;
-            font-size: 8.5px;
+            font-size: 10px;
             color: ${accentMain};
-            margin-bottom: 5px;
+            margin-bottom: 7px;
             text-align: center;
           }
 
           .signature-zone {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 16px;
+            gap: 20px;
+            margin-top: 22px;
             text-align: center;
           }
           .signature-line {
             width: 100%;
-            height: 36px;
+            height: 44px;
             border-bottom: 1px solid ${accentMain};
           }
           .signature-label {
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9.5px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #8a7a5c;
-            margin-top: 6px;
+            margin-top: 7px;
           }
 
           .footer-sign {
-            margin-top: 14px;
-            font-family: \'Great Vibes\', cursive;
-            font-size: 19px;
+            margin-top: 20px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 22px;
             color: #4a3f28;
           }
           .footer-contact {
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 9px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 10.5px;
             letter-spacing: 1px;
             color: #8a7a5c;
-            margin-top: 4px;
+            margin-top: 5px;
           }
 
           .qr-block {
-            margin-top: 10px;
+            margin-top: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
           }
-          .qr-block img { width: 54px; height: 54px; }
+          .qr-block img { width: 66px; height: 66px; }
           .qr-block p {
-            font-family: \'Montserrat\', sans-serif;
-            font-size: 7.5px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 8.5px;
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 4px 0 0;
+            margin: 6px 0 0;
           }
 
           @media print {
@@ -2341,6 +2428,7 @@ const generateFactureHTML = (booking) => {
       </head>
       <body>
         <div class="page">
+          ${borderFrameSVG}
           <div class="content">
             <div class="content-inner">
 
@@ -2393,7 +2481,7 @@ const generateFactureHTML = (booking) => {
 
               <div class="divider"></div>
 
-              <div class="rsvp-title" style="font-family:\'Great Vibes\',cursive;font-size:26px;color:${accentMain};margin:2px 0 8px;">Règlement</div>
+              <div class="rsvp-title">${rsvpTitle}</div>
 
               <div class="price-line"><span class="lab">Forfait évènement</span><span>${formatCurrency(prixBaseAffiche)}</span></div>
               ${shootingRow}
@@ -2430,7 +2518,7 @@ const generateFactureHTML = (booking) => {
 
     downloadHTML(factureHTML, `facture-FWE-${booking.client}-${booking.date}.html`);
     showNotification("Facture prestige générée avec succès", "success");
-};
+  };
 
   // Télécharge une chaîne HTML sous forme de fichier .html (utilisé par le devis et la facture).
   const downloadHTML = (html, filename) => {
