@@ -2064,8 +2064,8 @@ export default function CarRentalManagement() {
     const statusColor = statusColors[booking.paiement] || statusColors["Non payé"];
 
     const accentMain = "#3d2f1c";
-    const accentSoft = "#9c8a5c";
-    const accentBg = "#f8f4ea";
+    const accentSoft = "#a68b4a";
+    const accentBg = "#f9f5ea";
     const accentDivider = "#c6a869";
     const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
@@ -2083,17 +2083,85 @@ export default function CarRentalManagement() {
           Propreté : une pénalité de 100 DT s'applique en cas de salissures importantes constatées.
         </div>`;
 
-    // Motif floral "gravé" réutilisé aux 4 coins du cadre (miroir via transform CSS).
-    const ornamentSVG = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><g class="ornament-shape">
-        <path d="M8,8 C34,10 55,26 62,58 C44,52 18,40 8,8 Z"/>
-        <path d="M8,8 C20,24 38,33 66,36 C48,20 30,12 8,8 Z"/>
-        <path d="M13,18 C28,26 40,42 42,62 C28,55 14,44 13,18 Z"/>
-        <circle cx="58" cy="58" r="15"/>
-        <circle cx="50" cy="50" r="9"/>
-        <circle cx="66" cy="52" r="8"/>
-        <circle cx="52" cy="66" r="8"/>
-        <circle cx="67" cy="66" r="7"/>
-      </g></svg>`;
+    // ── Bordure ornementale ──────────────────────────────────────────────────
+    // Bouquet floral dense pour les 4 coins (repris et agrandi par rapport à la version précédente).
+    const cornerOrnament = `
+      <g class="corner-shape">
+        <path d="M10,10 C48,14 78,38 88,84 C64,74 24,56 10,10 Z"/>
+        <path d="M10,10 C28,34 54,46 92,50 C66,28 42,16 10,10 Z"/>
+        <path d="M18,26 C40,38 56,60 60,88 C40,78 20,62 18,26 Z"/>
+        <circle cx="80" cy="80" r="20"/>
+        <circle cx="68" cy="68" r="12"/>
+        <circle cx="92" cy="72" r="10"/>
+        <circle cx="70" cy="92" r="10"/>
+        <circle cx="94" cy="92" r="9"/>
+        <circle cx="52" cy="52" r="7"/>
+      </g>`;
+
+    // Petit motif de "feuille" réutilisé pour tisser une vigne continue le long des 4 bords.
+    const leafUnit = (variant) => `
+      <g class="vine-leaf">
+        <path d="M0,0 C10,-14 26,-14 34,0 C26,14 10,14 0,0 Z" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
+        <circle cx="17" cy="0" r="3" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
+      </g>`;
+
+    // Génère une rangée de motifs le long d'un segment horizontal (bord haut/bas).
+    const buildHorizontalVine = (yPos, xStart, xEnd, count) => {
+      const step = (xEnd - xStart) / (count - 1);
+      let out = "";
+      for (let i = 0; i < count; i++) {
+        const x = xStart + step * i;
+        const rot = i % 2 === 0 ? 0 : 180;
+        out += `<g transform="translate(${x},${yPos}) rotate(${rot})">${leafUnit(i)}</g>`;
+      }
+      return out;
+    };
+
+    // Génère une rangée de motifs le long d'un segment vertical (bord gauche/droit).
+    const buildVerticalVine = (xPos, yStart, yEnd, count) => {
+      const step = (yEnd - yStart) / (count - 1);
+      let out = "";
+      for (let i = 0; i < count; i++) {
+        const y = yStart + step * i;
+        const rot = i % 2 === 0 ? 90 : 270;
+        out += `<g transform="translate(${xPos},${y}) rotate(${rot})">${leafUnit(i)}</g>`;
+      }
+      return out;
+    };
+
+    // Viewbox calé sur le ratio A4 (1 : 1.4142)
+    const VB_W = 1000;
+    const VB_H = 1414;
+    const CORNER = 190;
+
+    const borderFrameSVG = `
+      <svg class="frame-svg" viewBox="0 0 ${VB_W} ${VB_H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <style>
+            .corner-shape path, .corner-shape circle,
+            .vine-leaf path, .vine-leaf circle { fill: ${accentBg}; }
+          </style>
+        </defs>
+
+        <!-- double liseré -->
+        <rect x="26" y="26" width="${VB_W - 52}" height="${VB_H - 52}" fill="none" stroke="${accentDivider}" stroke-width="2.4"/>
+        <rect x="40" y="40" width="${VB_W - 80}" height="${VB_H - 80}" fill="none" stroke="${accentDivider}" stroke-width="1.2"/>
+
+        <!-- vigne continue -->
+        <g opacity="0.95">
+          ${buildHorizontalVine(46, CORNER + 30, VB_W - CORNER - 30, 9)}
+          ${buildHorizontalVine(VB_H - 46, CORNER + 30, VB_W - CORNER - 30, 9)}
+          ${buildVerticalVine(46, CORNER + 30, VB_H - CORNER - 30, 12)}
+          ${buildVerticalVine(VB_W - 46, CORNER + 30, VB_H - CORNER - 30, 12)}
+        </g>
+
+        <!-- bouquets de coins -->
+        <g transform="translate(6,6) scale(1.35)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 6},6) scale(-1.35,1.35)">${cornerOrnament}</g>
+        <g transform="translate(6,${VB_H - 6}) scale(1.35,-1.35)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 6},${VB_H - 6}) scale(-1.35,-1.35)">${cornerOrnament}</g>
+      </svg>
+    `;
 
     const factureHTML = `
       <!DOCTYPE html>
@@ -2106,49 +2174,48 @@ export default function CarRentalManagement() {
         <style>
           * { box-sizing: border-box; }
           @page { size: A4; margin: 0; }
-          html, body {
+          html { background: #cfc4a8; }
+          body {
             font-family: 'Cormorant Garamond', serif;
             margin: 0;
-            padding: 0;
-            background: #ded6c4;
+            padding: 10mm 0;
+            background: #cfc4a8;
             color: #4a3f30;
+            display: flex;
+            justify-content: center;
           }
           .page {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            padding: 12mm;
-            background: #ded6c4;
-            box-shadow: 0 30px 80px rgba(50,40,20,0.25);
-          }
-          .certificate-frame {
             position: relative;
-            width: 100%;
-            min-height: calc(297mm - 24mm);
+            width: 210mm;
+            height: 297mm;
             background: ${accentBg};
-            padding: 20mm 18mm;
-            box-shadow:
-              inset 0 0 0 1.5px ${accentDivider},
-              inset 0 0 0 6px ${accentBg},
-              inset 0 0 0 8px ${accentDivider};
+            box-shadow: 0 20px 60px rgba(50,40,20,0.35);
+            overflow: hidden;
+            flex-shrink: 0;
+          }
+          .frame-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
           }
 
-          .ornament { position: absolute; width: 34mm; height: 34mm; opacity: 0.95; color: ${accentSoft}; }
-          .ornament svg { width: 100%; height: 100%; }
-          .ornament path, .ornament circle { fill: ${accentBg}; }
-          .ornament-shape {
-            filter: drop-shadow(1px 1.5px 0.5px rgba(110,90,55,0.4)) drop-shadow(-1px -1.5px 0.5px rgba(255,255,255,0.9));
+          .content {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 26mm 24mm;
           }
-          .o-tl { top: 3mm; left: 3mm; }
-          .o-tr { top: 3mm; right: 3mm; transform: scaleX(-1); }
-          .o-bl { bottom: 3mm; left: 3mm; transform: scaleY(-1); }
-          .o-br { bottom: 3mm; right: 3mm; transform: scale(-1,-1); }
-
-          .content { text-align: center; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; }
+          .content-inner {
+            text-align: center;
+            max-width: 130mm;
+          }
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10px;
+            font-size: 9.5px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #9c8a5c;
@@ -2156,26 +2223,26 @@ export default function CarRentalManagement() {
           }
           .logo {
             display: block;
-            max-width: 260px;
+            max-width: 62mm;
             width: 100%;
             height: auto;
-            margin: 0 auto 14px;
+            margin: 0 auto 12px;
           }
           .intro {
-            font-size: 15px;
+            font-size: 13.5px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #6b5c3f;
-            line-height: 1.9;
-            margin: 26px 0 6px;
+            line-height: 1.8;
+            margin: 18px 0 6px;
             font-weight: 500;
           }
 
           .clientname {
             font-family: 'Great Vibes', cursive;
-            font-size: 50px;
+            font-size: 42px;
             color: ${accentMain};
-            margin: 6px 0 22px;
+            margin: 6px 0 18px;
             line-height: 1;
             word-break: break-word;
           }
@@ -2184,189 +2251,175 @@ export default function CarRentalManagement() {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 14px;
-            margin: 18px 0 4px;
+            gap: 12px;
+            margin: 14px 0 4px;
           }
           .datewrap .dpart {
-            font-size: 17px;
+            font-size: 15px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #4a3f30;
           }
-          .datewrap .ddim { font-size: 24px; font-weight: 500; }
-          .datewrap .bar { width: 1px; height: 22px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 21px; font-weight: 500; }
+          .datewrap .bar { width: 1px; height: 20px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 13px;
-            letter-spacing: 1.5px;
+            font-size: 11.5px;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             color: #7a6f56;
-            margin: 10px 0 26px;
+            margin: 8px 0 20px;
           }
 
           .divider {
-            width: 120px;
+            width: 100px;
             height: 1px;
-            margin: 22px auto;
+            margin: 16px auto;
             background: linear-gradient(90deg, transparent, ${accentDivider}, transparent);
           }
 
           .block-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10px;
-            letter-spacing: 3px;
+            font-size: 9px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
             color: #9c7f3f;
-            margin: 0 0 8px;
+            margin: 0 0 6px;
           }
           .block-value {
-            font-size: 16px;
+            font-size: 14.5px;
             color: #3d2f1c;
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0 0 4px;
           }
-          .block-value.small { font-size: 14px; color: #6b5c3f; }
+          .block-value.small { font-size: 12.5px; color: #6b5c3f; }
 
           .infogrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 18px 10px;
-            margin: 4px 0 8px;
+            gap: 14px 8px;
+            margin: 4px 0 6px;
             text-align: center;
           }
 
           .rsvp-title {
             font-family: 'Great Vibes', cursive;
-            font-size: 34px;
+            font-size: 28px;
             color: ${accentMain};
-            margin: 4px 0 12px;
+            margin: 2px 0 10px;
           }
 
           .price-line {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            font-size: 14.5px;
+            gap: 8px;
+            font-size: 13px;
             color: #5c5140;
-            padding: 5px 0;
+            padding: 4px 0;
           }
-          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 11.5px; color: #8a7a52; align-self: center; }
+          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; color: #8a7a52; align-self: center; }
           .price-total {
-            font-size: 24px;
+            font-size: 20px;
             color: ${accentMain};
-            margin: 14px 0 2px;
+            margin: 12px 0 2px;
             font-weight: 600;
           }
           .status-pill {
             display: inline-block;
-            margin-top: 10px;
-            padding: 4px 16px;
+            margin-top: 8px;
+            padding: 3px 14px;
             border-radius: 20px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 10.5px;
-            letter-spacing: 1.5px;
+            font-size: 9.5px;
+            letter-spacing: 1.4px;
             text-transform: uppercase;
             font-weight: 500;
           }
 
           .terms {
-            margin-top: 30px;
+            margin-top: 20px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
-            line-height: 1.9;
+            font-size: 8.5px;
+            line-height: 1.7;
             color: #8a7a5c;
             text-align: left;
-            padding: 16px 18px;
+            padding: 12px 14px;
             background: #efe7d4;
             border: 1px dashed ${accentDivider};
           }
           .terms strong {
             display: block;
-            letter-spacing: 2px;
+            letter-spacing: 1.8px;
             text-transform: uppercase;
-            font-size: 10px;
+            font-size: 9px;
             color: ${accentMain};
-            margin-bottom: 8px;
-            text-align: center;
-          }
-          .signature-zone {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin-top: 34px;
-            text-align: left;
-          }
-          .signature-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .signature-line {
-            width: 100%;
-            height: 60px;
-            border: 1px dashed ${accentDivider};
-            background: rgba(255,255,255,0.35);
-          }
-          .signature-label {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #8a7a5c;
-            margin-top: 8px;
+            margin-bottom: 6px;
             text-align: center;
           }
 
-          .footer-sign {
-            margin-top: 28px;
-            font-family: 'Great Vibes', cursive;
-            font-size: 24px;
-            color: #4a3f28;
+          .signature-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+            text-align: center;
           }
-          .footer-contact {
+          .signature-line {
+            width: 100%;
+            height: 42px;
+            border-bottom: 1px solid ${accentMain};
+          }
+          .signature-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10.5px;
-            letter-spacing: 1px;
+            font-size: 8.5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             color: #8a7a5c;
             margin-top: 6px;
           }
 
-          .qr-block {
+          .footer-sign {
             margin-top: 18px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 20px;
+            color: #4a3f28;
+          }
+          .footer-contact {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 1px;
+            color: #8a7a5c;
+            margin-top: 4px;
+          }
+
+          .qr-block {
+            margin-top: 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
           }
-          .qr-block img {
-            width: 76px;
-            height: 76px;
-          }
+          .qr-block img { width: 62px; height: 62px; }
           .qr-block p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
+            font-size: 8px;
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 6px 0 0;
+            margin: 5px 0 0;
           }
 
           @media print {
-            html, body { background: white; }
-            .page { box-shadow: none; padding: 0; width: 210mm; min-height: 297mm; }
-            .certificate-frame { min-height: calc(297mm - 24mm); }
+            html, body { background: white; padding: 0; }
+            .page { box-shadow: none; }
           }
         </style>
       </head>
       <body>
         <div class="page">
-          <div class="certificate-frame">
+          ${borderFrameSVG}
+          <div class="content">
+            <div class="content-inner">
 
-            <div class="ornament o-tl">${ornamentSVG}</div>
-            <div class="ornament o-tr">${ornamentSVG}</div>
-            <div class="ornament o-bl">${ornamentSVG}</div>
-            <div class="ornament o-br">${ornamentSVG}</div>
-
-            <div class="content">
               <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
               <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
 
@@ -2412,7 +2465,7 @@ export default function CarRentalManagement() {
                 ${lieuShootingItem}
               </div>
 
-              ${booking.commentaires ? `<p class="block-value small" style="margin-top:10px;">« ${booking.commentaires} »</p>` : ""}
+              ${booking.commentaires ? `<p class="block-value small" style="margin-top:8px;">« ${booking.commentaires} »</p>` : ""}
 
               <div class="divider"></div>
 
@@ -2425,12 +2478,13 @@ export default function CarRentalManagement() {
               <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
 
               ${validityNote}
+
               <div class="signature-zone">
-                <div class="signature-box">
+                <div>
                   <div class="signature-line"></div>
                   <p class="signature-label">Signature du client</p>
                 </div>
-                <div class="signature-box">
+                <div>
                   <div class="signature-line"></div>
                   <p class="signature-label">Cachet de la société</p>
                 </div>
