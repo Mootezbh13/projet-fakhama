@@ -2077,7 +2077,6 @@ const generateFactureHTML = (booking) => {
     const statusColor = statusColors[booking.paiement] || statusColors["Non payé"];
 
     const accentMain = "#3d2f1c";
-    const accentBg = "#f5f1e6";
     const accentDivider = "#c6a869";
     const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
@@ -2086,7 +2085,7 @@ const generateFactureHTML = (booking) => {
     // ── PAGE 1 : détails de la facture + QR code ────────────────────────────
     const page1Content = `
       <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 2026</p>
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
 
       <p class="intro">Cette facture est émise pour</p>
 
@@ -2151,9 +2150,9 @@ const generateFactureHTML = (booking) => {
     // ── PAGE 2 : conditions générales + signature / cachet ─────────────────
     const page2Content = `
       <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 2026</p>
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
 
-      <p class="rsvp-title" style="margin-top:24px;">Conditions générales</p>
+      <p class="rsvp-title" style="margin-top:20px;">Conditions générales</p>
 
       <div class="terms-page2">
         <p><strong>Annulation</strong> — L'avance n'est pas remboursée en cas d'annulation moins de 7 jours avant la date prévue.</p>
@@ -2168,7 +2167,7 @@ const generateFactureHTML = (booking) => {
 
       <div class="divider"></div>
 
-      <p class="block-value small" style="margin-bottom: 26px;">
+      <p class="block-value small" style="margin-bottom: 22px;">
         En signant ce document, le client reconnaît avoir pris connaissance et accepté l'ensemble des conditions générales ci-dessus.
       </p>
 
@@ -2207,72 +2206,71 @@ const generateFactureHTML = (booking) => {
             color: #4a3f30;
           }
 
-          /* ── Le cadre = photo fournie, appliquée en border-image ──────────
-             border-image découpe l'image en 9 zones : les 4 coins restent
-             intacts (comme sur votre photo), les 4 bords se répètent en
-             boucle (round) pour couvrir toute la longueur/largeur, et la
-             zone centrale de l'image est ignorée (on garde notre propre
-             fond crème + contenu à la place). */
+          /* ── La photo du cadre couvre TOUTE la page (fond plein) ──────────
+             Aucune "boîte" séparée : le texte est posé directement en
+             transparence par-dessus l'image, donc tout se fond avec la
+             texture crème/dentelle de la photo, sans rectangle visible. */
           .page {
             position: relative;
             width: 210mm;
             height: 297mm;
-            background: ${accentBg};
+            background-image: url(${FACTURE_FRAME_BASE64});
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             margin: 0 auto 10mm;
             page-break-after: always;
-
-            border-style: solid;
-            border-width: 24mm 19mm;
-            border-image-source: url(${FACTURE_FRAME_BASE64});
-            border-image-slice: 24%;
-            border-image-repeat: round;
+            overflow: hidden;
           }
           .page:last-child { page-break-after: auto; }
 
+          /* Zone de texte calée sur la partie crème unie au centre de la photo
+             (le cadre décoratif occupe environ les 15% extérieurs du visuel). */
           .content {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 17%; left: 15%; right: 15%; bottom: 15%;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6mm 8mm;
+            overflow: hidden;
           }
           .content-inner {
             text-align: center;
+            width: 100%;
             max-width: 130mm;
           }
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10px;
+            font-size: 9.5px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 0 0 6px;
+            margin: 0 0 5px;
           }
           .logo {
             display: block;
-            max-width: 62mm;
+            max-width: 56mm;
             width: 100%;
             height: auto;
-            margin: 0 auto 12px;
+            margin: 0 auto 10px;
           }
           .intro {
-            font-size: 13.5px;
+            font-size: 12.5px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #6b5c3f;
-            line-height: 1.8;
-            margin: 18px 0 6px;
+            line-height: 1.7;
+            margin: 14px 0 5px;
             font-weight: 500;
           }
 
           .clientname {
             font-family: 'Great Vibes', cursive;
-            font-size: 42px;
+            font-size: 38px;
             color: ${accentMain};
-            margin: 6px 0 18px;
+            margin: 4px 0 14px;
             line-height: 1;
             word-break: break-word;
           }
@@ -2281,160 +2279,160 @@ const generateFactureHTML = (booking) => {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
-            margin: 14px 0 4px;
+            gap: 10px;
+            margin: 10px 0 4px;
           }
           .datewrap .dpart {
-            font-size: 15px;
+            font-size: 13.5px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #4a3f30;
           }
-          .datewrap .ddim { font-size: 21px; font-weight: 500; }
-          .datewrap .bar { width: 1px; height: 20px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 19px; font-weight: 500; }
+          .datewrap .bar { width: 1px; height: 18px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 11.5px;
-            letter-spacing: 1.2px;
+            font-size: 10.5px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             color: #7a6f56;
-            margin: 8px 0 20px;
+            margin: 6px 0 16px;
           }
 
           .divider {
-            width: 100px;
+            width: 90px;
             height: 1px;
-            margin: 16px auto;
+            margin: 13px auto;
             background: linear-gradient(90deg, transparent, ${accentDivider}, transparent);
           }
 
           .block-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            letter-spacing: 2.5px;
+            font-size: 8.5px;
+            letter-spacing: 2.2px;
             text-transform: uppercase;
             color: #9c7f3f;
-            margin: 0 0 6px;
+            margin: 0 0 5px;
           }
           .block-value {
-            font-size: 14.5px;
+            font-size: 13px;
             color: #3d2f1c;
-            line-height: 1.5;
-            margin: 0 0 4px;
+            line-height: 1.45;
+            margin: 0 0 3px;
           }
-          .block-value.small { font-size: 12.5px; color: #6b5c3f; }
+          .block-value.small { font-size: 11.5px; color: #6b5c3f; }
 
           .infogrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px 8px;
-            margin: 4px 0 6px;
+            gap: 12px 6px;
+            margin: 3px 0 5px;
             text-align: center;
           }
 
           .rsvp-title {
             font-family: 'Great Vibes', cursive;
-            font-size: 28px;
+            font-size: 25px;
             color: ${accentMain};
-            margin: 2px 0 10px;
+            margin: 2px 0 8px;
           }
 
           .price-line {
             display: flex;
             justify-content: center;
             gap: 8px;
-            font-size: 13px;
+            font-size: 12px;
             color: #5c5140;
-            padding: 4px 0;
+            padding: 3px 0;
           }
-          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; color: #8a7a52; align-self: center; }
+          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 9.5px; color: #8a7a52; align-self: center; }
           .price-total {
-            font-size: 20px;
+            font-size: 18px;
             color: ${accentMain};
-            margin: 12px 0 2px;
+            margin: 10px 0 2px;
             font-weight: 600;
           }
           .status-pill {
             display: inline-block;
-            margin-top: 8px;
-            padding: 3px 14px;
+            margin-top: 7px;
+            padding: 3px 13px;
             border-radius: 20px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
-            letter-spacing: 1.4px;
+            font-size: 9px;
+            letter-spacing: 1.3px;
             text-transform: uppercase;
             font-weight: 500;
           }
 
           .terms-page2 {
-            margin-top: 18px;
+            margin-top: 14px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 11px;
-            line-height: 1.9;
+            font-size: 9.5px;
+            line-height: 1.75;
             color: #5c5140;
             text-align: left;
-            padding: 18px 20px;
-            background: #f0ece0;
+            padding: 14px 16px;
+            background: rgba(240, 236, 224, 0.55);
             border: 1px solid ${accentDivider};
           }
-          .terms-page2 p { margin: 0 0 10px; }
+          .terms-page2 p { margin: 0 0 8px; }
           .terms-page2 p:last-child { margin-bottom: 0; }
           .terms-page2 strong {
             color: ${accentMain};
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-size: 10.5px;
+            font-size: 9.5px;
           }
 
           .signature-zone {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 10px;
+            gap: 16px;
+            margin-top: 8px;
             text-align: center;
           }
           .signature-line {
             width: 100%;
-            height: 46px;
+            height: 38px;
             border-bottom: 1px solid ${accentMain};
           }
           .signature-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            letter-spacing: 2px;
+            font-size: 8.5px;
+            letter-spacing: 1.8px;
             text-transform: uppercase;
             color: #8a7a5c;
-            margin-top: 7px;
+            margin-top: 6px;
           }
 
           .footer-sign {
-            margin-top: 26px;
+            margin-top: 20px;
             font-family: 'Great Vibes', cursive;
-            font-size: 20px;
+            font-size: 18px;
             color: #4a3f28;
           }
           .footer-contact {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
+            font-size: 9px;
             letter-spacing: 1px;
             color: #8a7a5c;
-            margin-top: 4px;
+            margin-top: 3px;
           }
 
           .qr-block {
-            margin-top: 14px;
+            margin-top: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
           }
-          .qr-block img { width: 62px; height: 62px; }
+          .qr-block img { width: 56px; height: 56px; }
           .qr-block p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8px;
+            font-size: 7.5px;
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 5px 0 0;
+            margin: 4px 0 0;
           }
 
           @media print {
