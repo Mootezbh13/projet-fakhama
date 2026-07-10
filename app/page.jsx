@@ -307,12 +307,12 @@ const ItineraryMap = ({ stops, title = "🗺️ Aperçu de l'itinéraire" }) => 
 const SIDEBAR_ITEMS = [
   { id: "simulation", label: "Simulation", icon: "💰" },
   { id: "reservations", label: "Réservations", icon: "💍" },
-  { id: "archive", label: "Archive", icon: "📦" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "maintenance", label: "Maintenance", icon: "🔧" },
   { id: "assurances", label: "Assurances", icon: "🛡️" },
   { id: "vignettes", label: "Vignettes", icon: "📋" },
   { id: "carburant", label: "Carburant", icon: "⛽" },
+  { id: "archive", label: "Archive", icon: "📦" },
 ];
 
 const Sidebar = ({ activeTab, setActiveTab, onLogout }) => (
@@ -493,7 +493,7 @@ const WhatsAppButton = ({ booking }) => {
 
     const message = `
 🌸 *Fakhama Weddings & Events* 🌸
-_BMW Série 3 320i 2026_
+_BMW Série 3 2026_
 
 ✅ *Confirmation de Réservation*
 
@@ -986,7 +986,7 @@ const LoginForm = ({ onLogin, error }) => {
             <span className="text-xl font-bold text-white">FWE</span>
           </div>
           <h1 className="text-2xl font-bold text-center text-gray-900">Fakhama Weddings & Events</h1>
-          <p className="text-sm text-gray-500 text-center">BMW Série 3 320i 2026</p>
+          <p className="text-sm text-gray-500 text-center">BMW Série 3 2026</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
@@ -1051,7 +1051,7 @@ const PriceSimulation = () => {
               <div className="bg-rose-50 rounded-lg p-4 border border-rose-200">
                 <h3 className="font-semibold text-rose-800 mb-2">ℹ️ Prestations incluses :</h3>
                 <ul className="text-sm text-rose-700 space-y-1">
-                  <li>• BMW Série 3 320i 2026</li>
+                  <li>• BMW Série 3 2026</li>
                   <li>• Chauffeur professionnel</li>
                   <li>• Décoration nuptiale luxe</li>
                   <li>• Service durant la cérémonie</li>
@@ -1958,7 +1958,7 @@ export default function CarRentalManagement() {
           <div class="d-top">
             <div>
               <img class="d-brand-logo" src="${FAKHAMA_LOGO_BLACK_BASE64}" alt="Fakhama Weddings & Events" />
-              <p class="d-brand-sub">Weddings &amp; Events · BMW Série 3 320i 2026</p>
+              <p class="d-brand-sub">Weddings &amp; Events · BMW Série 3 2026</p>
             </div>
             <div>
               <p class="d-doc-title">DEVIS</p>
@@ -2086,7 +2086,7 @@ const generateFactureHTML = (booking) => {
     // ── PAGE 1 : détails de la facture + QR code ────────────────────────────
     const page1Content = `
       <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 2026</p>
 
       <p class="intro">Cette facture est émise pour</p>
 
@@ -2151,7 +2151,7 @@ const generateFactureHTML = (booking) => {
     // ── PAGE 2 : conditions générales + signature / cachet ─────────────────
     const page2Content = `
       <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 2026</p>
 
       <p class="rsvp-title" style="margin-top:24px;">Conditions générales</p>
 
