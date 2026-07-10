@@ -2076,79 +2076,83 @@ const generateFactureHTML = (booking) => {
     const statusColor = statusColors[booking.paiement] || statusColors["Non payé"];
 
     const accentMain = "#3d2f1c";
-    const accentSoft = "#a68b4a";
-    const accentBg = "#f9f5ea";
+    const accentBg = "#f5f1e6";
     const accentDivider = "#c6a869";
     const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
     const totalValue = booking.reste || 0;
 
-    // ── Bordure ornementale (identique aux 2 pages) ─────────────────────────
-    const cornerOrnament = `
-      <g class="corner-shape">
-        <path d="M10,10 C48,14 78,38 88,84 C64,74 24,56 10,10 Z"/>
-        <path d="M10,10 C28,34 54,46 92,50 C66,28 42,16 10,10 Z"/>
-        <path d="M18,26 C40,38 56,60 60,88 C40,78 20,62 18,26 Z"/>
-        <circle cx="80" cy="80" r="20"/>
-        <circle cx="68" cy="68" r="12"/>
-        <circle cx="92" cy="72" r="10"/>
-        <circle cx="70" cy="92" r="10"/>
-        <circle cx="94" cy="92" r="9"/>
-        <circle cx="52" cy="52" r="7"/>
-      </g>`;
-
-    const leafUnit = (variant) => `
-      <g class="vine-leaf">
-        <path d="M0,0 C10,-14 26,-14 34,0 C26,14 10,14 0,0 Z" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
-        <circle cx="17" cy="0" r="3" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
-      </g>`;
-
-    const buildHorizontalVine = (yPos, xStart, xEnd, count) => {
-      const step = (xEnd - xStart) / (count - 1);
-      let out = "";
-      for (let i = 0; i < count; i++) {
-        const x = xStart + step * i;
-        const rot = i % 2 === 0 ? 0 : 180;
-        out += `<g transform="translate(${x},${yPos}) rotate(${rot})">${leafUnit(i)}</g>`;
-      }
-      return out;
-    };
-
-    const buildVerticalVine = (xPos, yStart, yEnd, count) => {
-      const step = (yEnd - yStart) / (count - 1);
-      let out = "";
-      for (let i = 0; i < count; i++) {
-        const y = yStart + step * i;
-        const rot = i % 2 === 0 ? 90 : 270;
-        out += `<g transform="translate(${xPos},${y}) rotate(${rot})">${leafUnit(i)}</g>`;
-      }
-      return out;
-    };
+    // ── Cadre "dentelle/damassé" gris sur fond ivoire (façon tapis / bordure de faire-part) ──
+    const frameGray = "#9c9890";
+    const frameGrayLight = "#bab6ac";
 
     const VB_W = 1000;
     const VB_H = 1414;
-    const CORNER = 190;
+    const B_OUT = 34;    // début de la bande à motif
+    const B_IN = 132;    // fin de la bande / début de la zone centrale (crème unie)
+    const OUTER1 = 20;   // double filet extérieur - trait 1
+    const OUTER2 = 27;   // double filet extérieur - trait 2
+    const INNER1 = 140;  // double filet intérieur - trait 1
+    const INNER2 = 147;  // double filet intérieur - trait 2
+
+    // Génère les points d'une ligne en dents-de-scie (zigzag), horizontale ou verticale.
+    const buildZigzagPoints = (fixed, start, end, count, amp, axis) => {
+      const step = (end - start) / (count * 2);
+      const pts = [];
+      for (let i = 0; i <= count * 2; i++) {
+        const pos = start + step * i;
+        const offset = i % 2 === 0 ? 0 : amp;
+        pts.push(axis === "h" ? `${pos},${fixed - offset}` : `${fixed - offset},${pos}`);
+      }
+      return pts.join(" ");
+    };
+
+    // Motif "dentelle" : lattice de losanges reliés par de petits pétales et points,
+    // dans le même esprit que la bordure de tapis/faire-part fournie en référence.
+    const lacePatternDef = `
+      <pattern id="lacePattern" width="46" height="46" patternUnits="userSpaceOnUse">
+        <rect width="46" height="46" fill="${accentBg}"/>
+        <g fill="none" stroke="${frameGray}" stroke-width="1.8">
+          <path d="M23,3 L43,23 L23,43 L3,23 Z"/>
+        </g>
+        <g fill="${frameGray}">
+          <circle cx="23" cy="23" r="3.6"/>
+          <circle cx="23" cy="3" r="2"/>
+          <circle cx="43" cy="23" r="2"/>
+          <circle cx="23" cy="43" r="2"/>
+          <circle cx="3" cy="23" r="2"/>
+        </g>
+        <g fill="none" stroke="${frameGrayLight}" stroke-width="1.2">
+          <path d="M23,3 C27,9 27,17 23,23 C19,17 19,9 23,3 Z"/>
+          <path d="M43,23 C37,27 29,27 23,23 C29,19 37,19 43,23 Z"/>
+          <path d="M23,43 C19,37 19,29 23,23 C27,29 27,37 23,43 Z"/>
+          <path d="M3,23 C9,19 17,19 23,23 C17,27 9,27 3,23 Z"/>
+        </g>
+      </pattern>
+    `;
 
     const borderFrameSVG = `
       <svg class="frame-svg" viewBox="0 0 ${VB_W} ${VB_H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <style>
-            .corner-shape path, .corner-shape circle,
-            .vine-leaf path, .vine-leaf circle { fill: ${accentBg}; }
-          </style>
-        </defs>
-        <rect x="26" y="26" width="${VB_W - 52}" height="${VB_H - 52}" fill="none" stroke="${accentDivider}" stroke-width="2.4"/>
-        <rect x="40" y="40" width="${VB_W - 80}" height="${VB_H - 80}" fill="none" stroke="${accentDivider}" stroke-width="1.2"/>
-        <g opacity="0.95">
-          ${buildHorizontalVine(46, CORNER + 30, VB_W - CORNER - 30, 9)}
-          ${buildHorizontalVine(VB_H - 46, CORNER + 30, VB_W - CORNER - 30, 9)}
-          ${buildVerticalVine(46, CORNER + 30, VB_H - CORNER - 30, 12)}
-          ${buildVerticalVine(VB_W - 46, CORNER + 30, VB_H - CORNER - 30, 12)}
-        </g>
-        <g transform="translate(6,6) scale(1.35)">${cornerOrnament}</g>
-        <g transform="translate(${VB_W - 6},6) scale(-1.35,1.35)">${cornerOrnament}</g>
-        <g transform="translate(6,${VB_H - 6}) scale(1.35,-1.35)">${cornerOrnament}</g>
-        <g transform="translate(${VB_W - 6},${VB_H - 6}) scale(-1.35,-1.35)">${cornerOrnament}</g>
+        <defs>${lacePatternDef}</defs>
+
+        <!-- bande à motif dentelle sur tout le pourtour -->
+        <rect x="0" y="0" width="${VB_W}" height="${VB_H}" fill="url(#lacePattern)"/>
+        <!-- zone centrale unie (contenu) -->
+        <rect x="${B_IN}" y="${B_IN}" width="${VB_W - 2 * B_IN}" height="${VB_H - 2 * B_IN}" fill="${accentBg}"/>
+
+        <!-- double filet extérieur -->
+        <rect x="${OUTER1}" y="${OUTER1}" width="${VB_W - 2 * OUTER1}" height="${VB_H - 2 * OUTER1}" fill="none" stroke="${frameGray}" stroke-width="2"/>
+        <rect x="${OUTER2}" y="${OUTER2}" width="${VB_W - 2 * OUTER2}" height="${VB_H - 2 * OUTER2}" fill="none" stroke="${frameGray}" stroke-width="1"/>
+
+        <!-- liseré en dents-de-scie à la jonction bande / champ -->
+        <polyline points="${buildZigzagPoints(B_IN - 6, B_OUT + 10, VB_W - B_OUT - 10, 26, 7, "h")}" fill="none" stroke="${frameGray}" stroke-width="2.4" stroke-linejoin="round"/>
+        <polyline points="${buildZigzagPoints(VB_H - B_IN + 6, B_OUT + 10, VB_W - B_OUT - 10, 26, -7, "h")}" fill="none" stroke="${frameGray}" stroke-width="2.4" stroke-linejoin="round"/>
+        <polyline points="${buildZigzagPoints(B_IN - 6, B_OUT + 10, VB_H - B_OUT - 10, 36, 7, "v")}" fill="none" stroke="${frameGray}" stroke-width="2.4" stroke-linejoin="round"/>
+        <polyline points="${buildZigzagPoints(VB_W - B_IN + 6, B_OUT + 10, VB_H - B_OUT - 10, 36, -7, "v")}" fill="none" stroke="${frameGray}" stroke-width="2.4" stroke-linejoin="round"/>
+
+        <!-- double filet intérieur -->
+        <rect x="${INNER1}" y="${INNER1}" width="${VB_W - 2 * INNER1}" height="${VB_H - 2 * INNER1}" fill="none" stroke="${frameGray}" stroke-width="1.6"/>
+        <rect x="${INNER2}" y="${INNER2}" width="${VB_W - 2 * INNER2}" height="${VB_H - 2 * INNER2}" fill="none" stroke="${frameGrayLight}" stroke-width="1"/>
       </svg>
     `;
 
@@ -2300,7 +2304,7 @@ const generateFactureHTML = (booking) => {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 26mm 24mm;
+            padding: 33mm 32mm;
           }
           .content-inner {
             text-align: center;
@@ -2437,8 +2441,8 @@ const generateFactureHTML = (booking) => {
             line-height: 1.9;
             color: #5c5140;
             text-align: left;
-            padding: 20px 24px;
-            background: #efe7d4;
+            padding: 18px 20px;
+            background: #f0ece0;
             border: 1px solid ${accentDivider};
           }
           .terms-page2 p { margin: 0 0 10px; }
