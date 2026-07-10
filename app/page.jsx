@@ -2034,7 +2034,6 @@ export default function CarRentalManagement() {
       ? ["Tunis", ...booking.trajetStops].join(" → ")
       : booking.trajet || "Tunis";
 
-    // Date de l'évènement découpée pour l'affichage "MOIS | JOUR | ANNÉE"
     const eventDateObj = new Date(booking.date);
     const eventMonth = isNaN(eventDateObj)
       ? ""
@@ -2066,9 +2065,8 @@ export default function CarRentalManagement() {
 
     const accentMain = "#3d2f1c";
     const accentSoft = "#9c8a5c";
-    const accentBg = "#f7f2e7";
+    const accentBg = "#f8f4ea";
     const accentDivider = "#c6a869";
-    const docTitle = "Facture évènement";
     const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
     const totalValue = booking.reste || 0;
@@ -2085,7 +2083,7 @@ export default function CarRentalManagement() {
           Propreté : une pénalité de 100 DT s'applique en cas de salissures importantes constatées.
         </div>`;
 
-    // Motif floral "gravé" réutilisé aux 4 coins (miroir via transform CSS).
+    // Motif floral "gravé" réutilisé aux 4 coins du cadre (miroir via transform CSS).
     const ornamentSVG = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><g class="ornament-shape">
         <path d="M8,8 C34,10 55,26 62,58 C44,52 18,40 8,8 Z"/>
         <path d="M8,8 C20,24 38,33 66,36 C48,20 30,12 8,8 Z"/>
@@ -2107,48 +2105,46 @@ export default function CarRentalManagement() {
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Great+Vibes&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
         <style>
           * { box-sizing: border-box; }
-          body {
+          @page { size: A4; margin: 0; }
+          html, body {
             font-family: 'Cormorant Garamond', serif;
             margin: 0;
-            padding: 48px 16px;
+            padding: 0;
             background: #ded6c4;
             color: #4a3f30;
           }
-          .invoice-container {
-            max-width: 640px;
+          .page {
+            width: 210mm;
+            min-height: 297mm;
             margin: 0 auto;
-            background: ${accentBg};
-            position: relative;
+            padding: 12mm;
+            background: #ded6c4;
             box-shadow: 0 30px 80px rgba(50,40,20,0.25);
-            padding: 56px 46px 44px;
-            overflow: hidden;
           }
-          .ornament { position: absolute; width: 130px; height: 130px; opacity: 0.9; color: ${accentSoft}; }
+          .certificate-frame {
+            position: relative;
+            width: 100%;
+            min-height: calc(297mm - 24mm);
+            background: ${accentBg};
+            padding: 20mm 18mm;
+            box-shadow:
+              inset 0 0 0 1.5px ${accentDivider},
+              inset 0 0 0 6px ${accentBg},
+              inset 0 0 0 8px ${accentDivider};
+          }
+
+          .ornament { position: absolute; width: 34mm; height: 34mm; opacity: 0.95; color: ${accentSoft}; }
           .ornament svg { width: 100%; height: 100%; }
           .ornament path, .ornament circle { fill: ${accentBg}; }
           .ornament-shape {
             filter: drop-shadow(1px 1.5px 0.5px rgba(110,90,55,0.4)) drop-shadow(-1px -1.5px 0.5px rgba(255,255,255,0.9));
           }
-          .o-tl { top: 14px; left: 14px; }
-          .o-tr { top: 14px; right: 14px; transform: scaleX(-1); }
-          .o-bl { bottom: 14px; left: 14px; transform: scaleY(-1); }
-          .o-br { bottom: 14px; right: 14px; transform: scale(-1,-1); }
+          .o-tl { top: 3mm; left: 3mm; }
+          .o-tr { top: 3mm; right: 3mm; transform: scaleX(-1); }
+          .o-bl { bottom: 3mm; left: 3mm; transform: scaleY(-1); }
+          .o-br { bottom: 3mm; right: 3mm; transform: scale(-1,-1); }
 
-          .content { text-align: center; position: relative; z-index: 1; }
-
-          .doc-badge {
-            display: inline-block;
-            margin-bottom: 10px;
-            padding: 4px 18px;
-            border-radius: 20px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 11px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            font-weight: 600;
-            background: #8a6d1a;
-            color: white;
-          }
+          .content { text-align: center; position: relative; z-index: 1; max-width: 480px; margin: 0 auto; }
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
@@ -2293,6 +2289,33 @@ export default function CarRentalManagement() {
             margin-bottom: 8px;
             text-align: center;
           }
+          .signature-zone {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 34px;
+            text-align: left;
+          }
+          .signature-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .signature-line {
+            width: 100%;
+            height: 60px;
+            border: 1px dashed ${accentDivider};
+            background: rgba(255,255,255,0.35);
+          }
+          .signature-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9.5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #8a7a5c;
+            margin-top: 8px;
+            text-align: center;
+          }
 
           .footer-sign {
             margin-top: 28px;
@@ -2328,86 +2351,98 @@ export default function CarRentalManagement() {
           }
 
           @media print {
-            body { background: white; padding: 0; }
-            .invoice-container { box-shadow: none; }
+            html, body { background: white; }
+            .page { box-shadow: none; padding: 0; width: 210mm; min-height: 297mm; }
+            .certificate-frame { min-height: calc(297mm - 24mm); }
           }
         </style>
       </head>
       <body>
-        <div class="invoice-container">
+        <div class="page">
+          <div class="certificate-frame">
 
-          <div class="ornament o-tl">${ornamentSVG}</div>
-          <div class="ornament o-tr">${ornamentSVG}</div>
-          <div class="ornament o-bl">${ornamentSVG}</div>
-          <div class="ornament o-br">${ornamentSVG}</div>
+            <div class="ornament o-tl">${ornamentSVG}</div>
+            <div class="ornament o-tr">${ornamentSVG}</div>
+            <div class="ornament o-bl">${ornamentSVG}</div>
+            <div class="ornament o-br">${ornamentSVG}</div>
 
-          <div class="content">
-            <span class="doc-badge">Facture</span>
-            <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-            <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
+            <div class="content">
+              <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
+              <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
 
-            <p class="intro">${docTitle}<br>émise pour</p>
+              <p class="intro">Cette facture est émise pour</p>
 
-            <div class="clientname">${booking.client}</div>
+              <div class="clientname">${booking.client}</div>
 
-            <div class="datewrap">
-              <span class="dpart">${eventMonth}</span>
-              <span class="bar"></span>
-              <span class="dpart ddim">${eventDay}</span>
-              <span class="bar"></span>
-              <span class="dpart">${eventYear}</span>
-            </div>
-            <p class="timeline">à ${booking.heure} · N° FWE-${booking.id}-${new Date().getFullYear()} · émise le ${dateFacture} à ${heureFacture}</p>
-
-            <div class="divider"></div>
-
-            <p class="block-label">Itinéraire</p>
-            <p class="block-value">${itineraire}</p>
-            <p class="block-value small">${booking.distance} km${booking.retour ? " · service retour inclus" : ""}</p>
-
-            <div class="divider"></div>
-
-            <div class="infogrid">
-              <div>
-                <p class="block-label">Emplacement du marié</p>
-                <p class="block-value small">${booking.lieuMarie || "À confirmer"}</p>
+              <div class="datewrap">
+                <span class="dpart">${eventMonth}</span>
+                <span class="bar"></span>
+                <span class="dpart ddim">${eventDay}</span>
+                <span class="bar"></span>
+                <span class="dpart">${eventYear}</span>
               </div>
-              <div>
-                <p class="block-label">Emplacement de la mariée</p>
-                <p class="block-value small">${booking.lieuMariee || "À confirmer"}</p>
+              <p class="timeline">à ${booking.heure} · N° FWE-${booking.id}-${new Date().getFullYear()} · émise le ${dateFacture} à ${heureFacture}</p>
+
+              <div class="divider"></div>
+
+              <p class="block-label">Itinéraire</p>
+              <p class="block-value">${itineraire}</p>
+              <p class="block-value small">${booking.distance} km${booking.retour ? " · service retour inclus" : ""}</p>
+
+              <div class="divider"></div>
+
+              <div class="infogrid">
+                <div>
+                  <p class="block-label">Emplacement du marié</p>
+                  <p class="block-value small">${booking.lieuMarie || "À confirmer"}</p>
+                </div>
+                <div>
+                  <p class="block-label">Emplacement de la mariée</p>
+                  <p class="block-value small">${booking.lieuMariee || "À confirmer"}</p>
+                </div>
+                <div>
+                  <p class="block-label">Salle des fêtes</p>
+                  <p class="block-value small">${booking.salleFetes || "À confirmer"}</p>
+                </div>
+                <div>
+                  <p class="block-label">Décoration</p>
+                  <p class="block-value small">${decorationLabel}</p>
+                </div>
+                ${lieuRetourItem}
+                ${lieuShootingItem}
               </div>
-              <div>
-                <p class="block-label">Salle des fêtes</p>
-                <p class="block-value small">${booking.salleFetes || "À confirmer"}</p>
+
+              ${booking.commentaires ? `<p class="block-value small" style="margin-top:10px;">« ${booking.commentaires} »</p>` : ""}
+
+              <div class="divider"></div>
+
+              <div class="rsvp-title">${rsvpTitle}</div>
+
+              <div class="price-line"><span class="lab">Forfait évènement</span><span>${formatCurrency(prixBaseAffiche)}</span></div>
+              ${shootingRow}
+              <div class="price-line"><span class="lab">Avance versée</span><span>${formatCurrency(booking.avance || 0)}</span></div>
+              <div class="price-total">${totalLabel} — ${formatCurrency(totalValue)}</div>
+              <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
+
+              ${validityNote}
+              <div class="signature-zone">
+                <div class="signature-box">
+                  <div class="signature-line"></div>
+                  <p class="signature-label">Signature du client</p>
+                </div>
+                <div class="signature-box">
+                  <div class="signature-line"></div>
+                  <p class="signature-label">Cachet de la société</p>
+                </div>
               </div>
-              <div>
-                <p class="block-label">Décoration</p>
-                <p class="block-value small">${decorationLabel}</p>
+
+              <p class="footer-sign">Avec toute notre estime</p>
+              <p class="footer-contact">+216 93 993 619 · contact@fakhama.tn</p>
+
+              <div class="qr-block">
+                <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
+                <p>Suivez-nous sur Facebook</p>
               </div>
-              ${lieuRetourItem}
-              ${lieuShootingItem}
-            </div>
-
-            ${booking.commentaires ? `<p class="block-value small" style="margin-top:10px;">« ${booking.commentaires} »</p>` : ""}
-
-            <div class="divider"></div>
-
-            <div class="rsvp-title">${rsvpTitle}</div>
-
-            <div class="price-line"><span class="lab">Forfait évènement</span><span>${formatCurrency(prixBaseAffiche)}</span></div>
-            ${shootingRow}
-            <div class="price-line"><span class="lab">Avance versée</span><span>${formatCurrency(booking.avance || 0)}</span></div>
-            <div class="price-total">${totalLabel} — ${formatCurrency(totalValue)}</div>
-            <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
-
-            ${validityNote}
-
-            <p class="footer-sign">Avec toute notre estime</p>
-            <p class="footer-contact">+216 93 993 619 · contact@fakhama.tn</p>
-
-            <div class="qr-block">
-              <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
-              <p>Suivez-nous sur Facebook</p>
             </div>
           </div>
         </div>
