@@ -2083,36 +2083,24 @@ const generateFactureHTML = (booking) => {
     const totalLabel = "Reste à payer";
     const totalValue = booking.reste || 0;
 
-    const validityNote = `<div class="terms">
-          <strong>Conditions générales</strong>
-          Annulation : l'avance n'est pas remboursée en cas d'annulation moins de 7 jours avant la date prévue.
-          Retard : majoration de 50 DT par heure de retard.
-          Paiement : le contrat est annulé si le montant total n'est pas réglé à l'arrivée du chauffeur.
-          Sécurité : les jeux d'artifice doivent être utilisés à une distance minimale de 5 mètres.
-          Itinéraire : en cas de circuit non sécurisé ou non asphalté, le chauffeur se réserve le droit de le modifier.
-          Assistance : en cas de problème mécanique, une voiture de même gamme ou supérieure sera fournie.
-          Départ : 24h avant, les emplacements du marié et de la mariée doivent être communiqués via WhatsApp avec localisation Maps.
-          Propreté : une pénalité de 100 DT s'applique en cas de salissures importantes constatées.
-        </div>`;
-
-    // ── Bordure ornementale (resserrée vers l'extérieur pour libérer le centre) ──
+    // ── Bordure ornementale (identique aux 2 pages) ─────────────────────────
     const cornerOrnament = `
       <g class="corner-shape">
-        <path d="M10,10 C42,13 68,34 76,72 C56,64 22,49 10,10 Z"/>
-        <path d="M10,10 C25,30 47,40 80,44 C58,25 37,14 10,10 Z"/>
-        <path d="M16,23 C35,33 49,52 52,76 C35,68 18,54 16,23 Z"/>
-        <circle cx="70" cy="70" r="17"/>
-        <circle cx="60" cy="60" r="10"/>
-        <circle cx="80" cy="63" r="9"/>
-        <circle cx="61" cy="80" r="9"/>
-        <circle cx="82" cy="80" r="8"/>
-        <circle cx="46" cy="46" r="6"/>
+        <path d="M10,10 C48,14 78,38 88,84 C64,74 24,56 10,10 Z"/>
+        <path d="M10,10 C28,34 54,46 92,50 C66,28 42,16 10,10 Z"/>
+        <path d="M18,26 C40,38 56,60 60,88 C40,78 20,62 18,26 Z"/>
+        <circle cx="80" cy="80" r="20"/>
+        <circle cx="68" cy="68" r="12"/>
+        <circle cx="92" cy="72" r="10"/>
+        <circle cx="70" cy="92" r="10"/>
+        <circle cx="94" cy="92" r="9"/>
+        <circle cx="52" cy="52" r="7"/>
       </g>`;
 
     const leafUnit = (variant) => `
       <g class="vine-leaf">
-        <path d="M0,0 C9,-12 22,-12 29,0 C22,12 9,12 0,0 Z" transform="scale(${variant % 2 === 0 ? 1 : 0.82})"/>
-        <circle cx="14.5" cy="0" r="2.6" transform="scale(${variant % 2 === 0 ? 1 : 0.82})"/>
+        <path d="M0,0 C10,-14 26,-14 34,0 C26,14 10,14 0,0 Z" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
+        <circle cx="17" cy="0" r="3" transform="scale(${variant % 2 === 0 ? 1 : 0.85})"/>
       </g>`;
 
     const buildHorizontalVine = (yPos, xStart, xEnd, count) => {
@@ -2137,11 +2125,9 @@ const generateFactureHTML = (booking) => {
       return out;
     };
 
-    // Viewbox calé sur le ratio A4 (1 : 1.4142). Bordure ramenée près du bord
-    // extérieur (16px) pour dégager un maximum d'espace utile au centre.
     const VB_W = 1000;
     const VB_H = 1414;
-    const CORNER = 150;
+    const CORNER = 190;
 
     const borderFrameSVG = `
       <svg class="frame-svg" viewBox="0 0 ${VB_W} ${VB_H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -2151,25 +2137,123 @@ const generateFactureHTML = (booking) => {
             .vine-leaf path, .vine-leaf circle { fill: ${accentBg}; }
           </style>
         </defs>
-
-        <!-- double liseré, resserré près du bord -->
-        <rect x="16" y="16" width="${VB_W - 32}" height="${VB_H - 32}" fill="none" stroke="${accentDivider}" stroke-width="2"/>
-        <rect x="27" y="27" width="${VB_W - 54}" height="${VB_H - 54}" fill="none" stroke="${accentDivider}" stroke-width="1"/>
-
-        <!-- vigne continue -->
+        <rect x="26" y="26" width="${VB_W - 52}" height="${VB_H - 52}" fill="none" stroke="${accentDivider}" stroke-width="2.4"/>
+        <rect x="40" y="40" width="${VB_W - 80}" height="${VB_H - 80}" fill="none" stroke="${accentDivider}" stroke-width="1.2"/>
         <g opacity="0.95">
-          ${buildHorizontalVine(31, CORNER + 20, VB_W - CORNER - 20, 8)}
-          ${buildHorizontalVine(VB_H - 31, CORNER + 20, VB_W - CORNER - 20, 8)}
-          ${buildVerticalVine(31, CORNER + 20, VB_H - CORNER - 20, 11)}
-          ${buildVerticalVine(VB_W - 31, CORNER + 20, VB_H - CORNER - 20, 11)}
+          ${buildHorizontalVine(46, CORNER + 30, VB_W - CORNER - 30, 9)}
+          ${buildHorizontalVine(VB_H - 46, CORNER + 30, VB_W - CORNER - 30, 9)}
+          ${buildVerticalVine(46, CORNER + 30, VB_H - CORNER - 30, 12)}
+          ${buildVerticalVine(VB_W - 46, CORNER + 30, VB_H - CORNER - 30, 12)}
         </g>
-
-        <!-- bouquets de coins -->
-        <g transform="translate(4,4) scale(1.05)">${cornerOrnament}</g>
-        <g transform="translate(${VB_W - 4},4) scale(-1.05,1.05)">${cornerOrnament}</g>
-        <g transform="translate(4,${VB_H - 4}) scale(1.05,-1.05)">${cornerOrnament}</g>
-        <g transform="translate(${VB_W - 4},${VB_H - 4}) scale(-1.05,-1.05)">${cornerOrnament}</g>
+        <g transform="translate(6,6) scale(1.35)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 6},6) scale(-1.35,1.35)">${cornerOrnament}</g>
+        <g transform="translate(6,${VB_H - 6}) scale(1.35,-1.35)">${cornerOrnament}</g>
+        <g transform="translate(${VB_W - 6},${VB_H - 6}) scale(-1.35,-1.35)">${cornerOrnament}</g>
       </svg>
+    `;
+
+    // ── PAGE 1 : détails de la facture + QR code ────────────────────────────
+    const page1Content = `
+      <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
+
+      <p class="intro">Cette facture est émise pour</p>
+
+      <div class="clientname">${booking.client}</div>
+
+      <div class="datewrap">
+        <span class="dpart">${eventMonth}</span>
+        <span class="bar"></span>
+        <span class="dpart ddim">${eventDay}</span>
+        <span class="bar"></span>
+        <span class="dpart">${eventYear}</span>
+      </div>
+      <p class="timeline">à ${booking.heure} · N° FWE-${booking.id}-${new Date().getFullYear()} · émise le ${dateFacture} à ${heureFacture}</p>
+
+      <div class="divider"></div>
+
+      <p class="block-label">Itinéraire</p>
+      <p class="block-value">${itineraire}</p>
+      <p class="block-value small">${booking.distance} km${booking.retour ? " · service retour inclus" : ""}</p>
+
+      <div class="divider"></div>
+
+      <div class="infogrid">
+        <div>
+          <p class="block-label">Emplacement du marié</p>
+          <p class="block-value small">${booking.lieuMarie || "À confirmer"}</p>
+        </div>
+        <div>
+          <p class="block-label">Emplacement de la mariée</p>
+          <p class="block-value small">${booking.lieuMariee || "À confirmer"}</p>
+        </div>
+        <div>
+          <p class="block-label">Salle des fêtes</p>
+          <p class="block-value small">${booking.salleFetes || "À confirmer"}</p>
+        </div>
+        <div>
+          <p class="block-label">Décoration</p>
+          <p class="block-value small">${decorationLabel}</p>
+        </div>
+        ${lieuRetourItem}
+        ${lieuShootingItem}
+      </div>
+
+      ${booking.commentaires ? `<p class="block-value small" style="margin-top:10px;">« ${booking.commentaires} »</p>` : ""}
+
+      <div class="divider"></div>
+
+      <div class="rsvp-title">${rsvpTitle}</div>
+
+      <div class="price-line"><span class="lab">Forfait évènement</span><span>${formatCurrency(prixBaseAffiche)}</span></div>
+      ${shootingRow}
+      <div class="price-line"><span class="lab">Avance versée</span><span>${formatCurrency(booking.avance || 0)}</span></div>
+      <div class="price-total">${totalLabel} — ${formatCurrency(totalValue)}</div>
+      <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
+
+      <div class="qr-block">
+        <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
+        <p>Suivez-nous sur Facebook</p>
+      </div>
+    `;
+
+    // ── PAGE 2 : conditions générales + signature / cachet ─────────────────
+    const page2Content = `
+      <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
+      <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
+
+      <p class="rsvp-title" style="margin-top:24px;">Conditions générales</p>
+
+      <div class="terms-page2">
+        <p><strong>Annulation</strong> — L'avance n'est pas remboursée en cas d'annulation moins de 7 jours avant la date prévue.</p>
+        <p><strong>Retard</strong> — Majoration de 50 DT par heure de retard.</p>
+        <p><strong>Paiement</strong> — Le contrat est annulé si le montant total n'est pas réglé à l'arrivée du chauffeur.</p>
+        <p><strong>Sécurité</strong> — Les jeux d'artifice doivent être utilisés à une distance minimale de 5 mètres.</p>
+        <p><strong>Itinéraire</strong> — En cas de circuit non sécurisé ou non asphalté, le chauffeur se réserve le droit de le modifier.</p>
+        <p><strong>Assistance</strong> — En cas de problème mécanique, une voiture de même gamme ou supérieure sera fournie.</p>
+        <p><strong>Départ</strong> — 24h avant, les emplacements du marié et de la mariée doivent être communiqués via WhatsApp avec localisation Maps.</p>
+        <p><strong>Propreté</strong> — Une pénalité de 100 DT s'applique en cas de salissures importantes constatées.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="block-value small" style="margin-bottom: 26px;">
+        En signant ce document, le client reconnaît avoir pris connaissance et accepté l'ensemble des conditions générales ci-dessus.
+      </p>
+
+      <div class="signature-zone">
+        <div>
+          <div class="signature-line"></div>
+          <p class="signature-label">Signature du client</p>
+        </div>
+        <div>
+          <div class="signature-line"></div>
+          <p class="signature-label">Cachet de la société</p>
+        </div>
+      </div>
+
+      <p class="footer-sign">Avec toute notre estime</p>
+      <p class="footer-contact">+216 93 993 619 · contact@fakhama.tn</p>
     `;
 
     const factureHTML = `
@@ -2190,8 +2274,6 @@ const generateFactureHTML = (booking) => {
             padding: 10mm 0;
             background: #cfc4a8;
             color: #4a3f30;
-            display: flex;
-            justify-content: center;
           }
           .page {
             position: relative;
@@ -2200,8 +2282,11 @@ const generateFactureHTML = (booking) => {
             background: ${accentBg};
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             overflow: hidden;
-            flex-shrink: 0;
+            margin: 0 auto 10mm;
+            page-break-after: always;
           }
+          .page:last-child { page-break-after: auto; }
+
           .frame-svg {
             position: absolute;
             inset: 0;
@@ -2209,51 +2294,49 @@ const generateFactureHTML = (booking) => {
             height: 100%;
           }
 
-          /* Zone de contenu bien dégagée de la bordure : marges généreuses */
           .content {
             position: absolute;
-            top: 34mm; left: 30mm; right: 30mm; bottom: 30mm;
+            top: 0; left: 0; right: 0; bottom: 0;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
-            overflow: hidden;
+            padding: 26mm 24mm;
           }
           .content-inner {
             text-align: center;
-            width: 100%;
-            max-width: 150mm;
+            max-width: 130mm;
           }
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 0 0 8px;
+            margin: 0 0 6px;
           }
           .logo {
             display: block;
-            max-width: 68mm;
+            max-width: 62mm;
             width: 100%;
             height: auto;
-            margin: 0 auto 14px;
+            margin: 0 auto 12px;
           }
           .intro {
-            font-size: 15px;
+            font-size: 13.5px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #6b5c3f;
             line-height: 1.8;
-            margin: 18px 0 8px;
+            margin: 18px 0 6px;
             font-weight: 500;
           }
 
           .clientname {
             font-family: 'Great Vibes', cursive;
-            font-size: 46px;
+            font-size: 42px;
             color: ${accentMain};
-            margin: 6px 0 20px;
+            margin: 6px 0 18px;
             line-height: 1;
             word-break: break-word;
           }
@@ -2262,128 +2345,126 @@ const generateFactureHTML = (booking) => {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 14px;
-            margin: 16px 0 6px;
+            gap: 12px;
+            margin: 14px 0 4px;
           }
           .datewrap .dpart {
-            font-size: 17px;
+            font-size: 15px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #4a3f30;
           }
-          .datewrap .ddim { font-size: 24px; font-weight: 600; }
-          .datewrap .bar { width: 1px; height: 22px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 21px; font-weight: 500; }
+          .datewrap .bar { width: 1px; height: 20px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 13px;
+            font-size: 11.5px;
             letter-spacing: 1.2px;
             text-transform: uppercase;
             color: #7a6f56;
-            margin: 8px 0 22px;
+            margin: 8px 0 20px;
           }
 
           .divider {
-            width: 110px;
+            width: 100px;
             height: 1px;
-            margin: 18px auto;
+            margin: 16px auto;
             background: linear-gradient(90deg, transparent, ${accentDivider}, transparent);
           }
 
           .block-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10.5px;
+            font-size: 9px;
             letter-spacing: 2.5px;
             text-transform: uppercase;
             color: #9c7f3f;
-            margin: 0 0 7px;
-            font-weight: 600;
+            margin: 0 0 6px;
           }
           .block-value {
-            font-size: 16.5px;
+            font-size: 14.5px;
             color: #3d2f1c;
             line-height: 1.5;
             margin: 0 0 4px;
           }
-          .block-value.small { font-size: 14.5px; color: #6b5c3f; }
+          .block-value.small { font-size: 12.5px; color: #6b5c3f; }
 
           .infogrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px 10px;
-            margin: 4px 0 8px;
+            gap: 14px 8px;
+            margin: 4px 0 6px;
             text-align: center;
           }
 
           .rsvp-title {
             font-family: 'Great Vibes', cursive;
-            font-size: 30px;
+            font-size: 28px;
             color: ${accentMain};
-            margin: 4px 0 12px;
+            margin: 2px 0 10px;
           }
 
           .price-line {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            font-size: 15px;
+            gap: 8px;
+            font-size: 13px;
             color: #5c5140;
-            padding: 5px 0;
+            padding: 4px 0;
           }
-          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 12px; color: #8a7a52; align-self: center; font-weight: 500; }
+          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; color: #8a7a52; align-self: center; }
           .price-total {
-            font-size: 22px;
+            font-size: 20px;
             color: ${accentMain};
-            margin: 14px 0 4px;
+            margin: 12px 0 2px;
             font-weight: 600;
           }
           .status-pill {
             display: inline-block;
             margin-top: 8px;
-            padding: 4px 16px;
+            padding: 3px 14px;
             border-radius: 20px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 10.5px;
+            font-size: 9.5px;
             letter-spacing: 1.4px;
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 500;
           }
 
-          .terms {
-            margin-top: 22px;
+          .terms-page2 {
+            margin-top: 18px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
-            line-height: 1.75;
-            color: #7c6b4c;
+            font-size: 11px;
+            line-height: 1.9;
+            color: #5c5140;
             text-align: left;
-            padding: 14px 16px;
+            padding: 20px 24px;
             background: #efe7d4;
-            border: 1px dashed ${accentDivider};
+            border: 1px solid ${accentDivider};
           }
-          .terms strong {
-            display: block;
-            letter-spacing: 1.8px;
-            text-transform: uppercase;
-            font-size: 10px;
+          .terms-page2 p { margin: 0 0 10px; }
+          .terms-page2 p:last-child { margin-bottom: 0; }
+          .terms-page2 strong {
             color: ${accentMain};
-            margin-bottom: 7px;
-            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 10.5px;
           }
 
           .signature-zone {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-top: 22px;
+            margin-top: 10px;
             text-align: center;
           }
           .signature-line {
             width: 100%;
-            height: 44px;
+            height: 46px;
             border-bottom: 1px solid ${accentMain};
           }
           .signature-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
+            font-size: 9px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #8a7a5c;
@@ -2391,127 +2472,61 @@ const generateFactureHTML = (booking) => {
           }
 
           .footer-sign {
-            margin-top: 20px;
+            margin-top: 26px;
             font-family: 'Great Vibes', cursive;
-            font-size: 22px;
+            font-size: 20px;
             color: #4a3f28;
           }
           .footer-contact {
             font-family: 'Montserrat', sans-serif;
-            font-size: 10.5px;
+            font-size: 9.5px;
             letter-spacing: 1px;
             color: #8a7a5c;
-            margin-top: 5px;
+            margin-top: 4px;
           }
 
           .qr-block {
-            margin-top: 16px;
+            margin-top: 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
           }
-          .qr-block img { width: 66px; height: 66px; }
+          .qr-block img { width: 62px; height: 62px; }
           .qr-block p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8.5px;
+            font-size: 8px;
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 6px 0 0;
+            margin: 5px 0 0;
           }
 
           @media print {
             html, body { background: white; padding: 0; }
-            .page { box-shadow: none; }
+            .page { box-shadow: none; margin: 0; }
           }
         </style>
       </head>
       <body>
+
         <div class="page">
           ${borderFrameSVG}
           <div class="content">
             <div class="content-inner">
-
-              <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
-              <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
-
-              <p class="intro">Cette facture est émise pour</p>
-
-              <div class="clientname">${booking.client}</div>
-
-              <div class="datewrap">
-                <span class="dpart">${eventMonth}</span>
-                <span class="bar"></span>
-                <span class="dpart ddim">${eventDay}</span>
-                <span class="bar"></span>
-                <span class="dpart">${eventYear}</span>
-              </div>
-              <p class="timeline">à ${booking.heure} · N° FWE-${booking.id}-${new Date().getFullYear()} · émise le ${dateFacture} à ${heureFacture}</p>
-
-              <div class="divider"></div>
-
-              <p class="block-label">Itinéraire</p>
-              <p class="block-value">${itineraire}</p>
-              <p class="block-value small">${booking.distance} km${booking.retour ? " · service retour inclus" : ""}</p>
-
-              <div class="divider"></div>
-
-              <div class="infogrid">
-                <div>
-                  <p class="block-label">Emplacement du marié</p>
-                  <p class="block-value small">${booking.lieuMarie || "À confirmer"}</p>
-                </div>
-                <div>
-                  <p class="block-label">Emplacement de la mariée</p>
-                  <p class="block-value small">${booking.lieuMariee || "À confirmer"}</p>
-                </div>
-                <div>
-                  <p class="block-label">Salle des fêtes</p>
-                  <p class="block-value small">${booking.salleFetes || "À confirmer"}</p>
-                </div>
-                <div>
-                  <p class="block-label">Décoration</p>
-                  <p class="block-value small">${decorationLabel}</p>
-                </div>
-                ${lieuRetourItem}
-                ${lieuShootingItem}
-              </div>
-
-              ${booking.commentaires ? `<p class="block-value small" style="margin-top:8px;">« ${booking.commentaires} »</p>` : ""}
-
-              <div class="divider"></div>
-
-              <div class="rsvp-title">${rsvpTitle}</div>
-
-              <div class="price-line"><span class="lab">Forfait évènement</span><span>${formatCurrency(prixBaseAffiche)}</span></div>
-              ${shootingRow}
-              <div class="price-line"><span class="lab">Avance versée</span><span>${formatCurrency(booking.avance || 0)}</span></div>
-              <div class="price-total">${totalLabel} — ${formatCurrency(totalValue)}</div>
-              <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
-
-              ${validityNote}
-
-              <div class="signature-zone">
-                <div>
-                  <div class="signature-line"></div>
-                  <p class="signature-label">Signature du client</p>
-                </div>
-                <div>
-                  <div class="signature-line"></div>
-                  <p class="signature-label">Cachet de la société</p>
-                </div>
-              </div>
-
-              <p class="footer-sign">Avec toute notre estime</p>
-              <p class="footer-contact">+216 93 993 619 · contact@fakhama.tn</p>
-
-              <div class="qr-block">
-                <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
-                <p>Suivez-nous sur Facebook</p>
-              </div>
+              ${page1Content}
             </div>
           </div>
         </div>
+
+        <div class="page">
+          ${borderFrameSVG}
+          <div class="content">
+            <div class="content-inner">
+              ${page2Content}
+            </div>
+          </div>
+        </div>
+
       </body>
       </html>
     `;
