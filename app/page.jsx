@@ -2129,7 +2129,7 @@ const generateFactureHTML = (booking) => {
         ${lieuShootingItem}
       </div>
 
-      ${booking.commentaires ? `<p class="block-value small" style="margin-top:10px;">« ${booking.commentaires} »</p>` : ""}
+      ${booking.commentaires ? `<p class="block-value small" style="margin-top:8px;">« ${booking.commentaires} »</p>` : ""}
 
       <div class="divider"></div>
 
@@ -2152,7 +2152,7 @@ const generateFactureHTML = (booking) => {
       <img class="logo" src="${FAKHAMA_LOGO_BROWN_BASE64}" alt="Fakhama Weddings & Events" />
       <p class="brandline">Fakhama Weddings &amp; Events · BMW Série 3 320i 2026</p>
 
-      <p class="rsvp-title" style="margin-top:20px;">Conditions générales</p>
+      <p class="rsvp-title" style="margin-top:16px;">Conditions générales</p>
 
       <div class="terms-page2">
         <p><strong>Annulation</strong> — L'avance n'est pas remboursée en cas d'annulation moins de 7 jours avant la date prévue.</p>
@@ -2167,7 +2167,7 @@ const generateFactureHTML = (booking) => {
 
       <div class="divider"></div>
 
-      <p class="block-value small" style="margin-bottom: 22px;">
+      <p class="block-value small" style="margin-bottom: 18px;">
         En signant ce document, le client reconnaît avoir pris connaissance et accepté l'ensemble des conditions générales ci-dessus.
       </p>
 
@@ -2206,10 +2206,8 @@ const generateFactureHTML = (booking) => {
             color: #4a3f30;
           }
 
-          /* ── La photo du cadre couvre TOUTE la page (fond plein) ──────────
-             Aucune "boîte" séparée : le texte est posé directement en
-             transparence par-dessus l'image, donc tout se fond avec la
-             texture crème/dentelle de la photo, sans rectangle visible. */
+          /* La photo du cadre couvre toute la page en fond, le texte est
+             posé en transparence par-dessus — aucune "boîte" séparée. */
           .page {
             position: relative;
             width: 210mm;
@@ -2225,13 +2223,14 @@ const generateFactureHTML = (booking) => {
           }
           .page:last-child { page-break-after: auto; }
 
-          /* Zone de texte calée sur la partie crème unie au centre de la photo
-             (le cadre décoratif occupe environ les 15% extérieurs du visuel). */
+          /* Contenu ancré en HAUT (et non centré verticalement) : ainsi, quand
+             le shooting ajoute des lignes, le contenu ne grandit que vers le
+             bas et ne pousse jamais le logo sous le motif du cadre. */
           .content {
             position: absolute;
-            top: 17%; left: 15%; right: 15%; bottom: 15%;
+            top: 15%; left: 15%; right: 15%; bottom: 5%;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             overflow: hidden;
           }
@@ -2243,34 +2242,34 @@ const generateFactureHTML = (booking) => {
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
+            font-size: 9px;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: #9c8a5c;
-            margin: 0 0 5px;
+            margin: 0 0 4px;
           }
           .logo {
             display: block;
-            max-width: 56mm;
+            max-width: 52mm;
             width: 100%;
             height: auto;
-            margin: 0 auto 10px;
+            margin: 0 auto 8px;
           }
           .intro {
-            font-size: 12.5px;
-            letter-spacing: 2px;
+            font-size: 11.5px;
+            letter-spacing: 1.8px;
             text-transform: uppercase;
             color: #6b5c3f;
-            line-height: 1.7;
-            margin: 14px 0 5px;
+            line-height: 1.6;
+            margin: 12px 0 4px;
             font-weight: 500;
           }
 
           .clientname {
             font-family: 'Great Vibes', cursive;
-            font-size: 38px;
+            font-size: 34px;
             color: ${accentMain};
-            margin: 4px 0 14px;
+            margin: 4px 0 12px;
             line-height: 1;
             word-break: break-word;
           }
@@ -2279,156 +2278,165 @@ const generateFactureHTML = (booking) => {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
-            margin: 10px 0 4px;
+            gap: 9px;
+            margin: 8px 0 3px;
           }
           .datewrap .dpart {
-            font-size: 13.5px;
-            letter-spacing: 3px;
+            font-size: 12.5px;
+            letter-spacing: 2.6px;
             text-transform: uppercase;
             color: #4a3f30;
           }
-          .datewrap .ddim { font-size: 19px; font-weight: 500; }
-          .datewrap .bar { width: 1px; height: 18px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 17px; font-weight: 500; }
+          .datewrap .bar { width: 1px; height: 16px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 10.5px;
-            letter-spacing: 1px;
+            font-size: 9.5px;
+            letter-spacing: 0.9px;
             text-transform: uppercase;
             color: #7a6f56;
-            margin: 6px 0 16px;
+            margin: 5px 0 14px;
           }
 
           .divider {
-            width: 90px;
+            width: 80px;
             height: 1px;
-            margin: 13px auto;
+            margin: 11px auto;
             background: linear-gradient(90deg, transparent, ${accentDivider}, transparent);
           }
 
           .block-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8.5px;
-            letter-spacing: 2.2px;
+            font-size: 8px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             color: #9c7f3f;
-            margin: 0 0 5px;
+            margin: 0 0 4px;
           }
           .block-value {
-            font-size: 13px;
+            font-size: 12px;
             color: #3d2f1c;
-            line-height: 1.45;
+            line-height: 1.4;
             margin: 0 0 3px;
           }
-          .block-value.small { font-size: 11.5px; color: #6b5c3f; }
+          .block-value.small { font-size: 10.5px; color: #6b5c3f; }
 
           .infogrid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px 6px;
-            margin: 3px 0 5px;
+            gap: 10px 6px;
+            margin: 2px 0 4px;
             text-align: center;
           }
 
           .rsvp-title {
             font-family: 'Great Vibes', cursive;
-            font-size: 25px;
+            font-size: 22px;
             color: ${accentMain};
-            margin: 2px 0 8px;
+            margin: 2px 0 7px;
           }
 
           .price-line {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            font-size: 12px;
+            gap: 7px;
+            font-size: 11px;
             color: #5c5140;
-            padding: 3px 0;
+            padding: 2px 0;
           }
-          .price-line .lab { letter-spacing: 1px; text-transform: uppercase; font-size: 9.5px; color: #8a7a52; align-self: center; }
+          .price-line .lab { letter-spacing: 0.8px; text-transform: uppercase; font-size: 8.8px; color: #8a7a52; align-self: center; }
           .price-total {
-            font-size: 18px;
+            font-size: 16px;
             color: ${accentMain};
-            margin: 10px 0 2px;
+            margin: 8px 0 2px;
             font-weight: 600;
           }
           .status-pill {
             display: inline-block;
-            margin-top: 7px;
-            padding: 3px 13px;
+            margin-top: 6px;
+            padding: 2px 12px;
             border-radius: 20px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            letter-spacing: 1.3px;
+            font-size: 8.3px;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             font-weight: 500;
           }
 
           .terms-page2 {
-            margin-top: 14px;
+            margin-top: 12px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9.5px;
-            line-height: 1.75;
+            font-size: 9px;
+            line-height: 1.7;
             color: #5c5140;
             text-align: left;
-            padding: 14px 16px;
-            background: rgba(240, 236, 224, 0.55);
+            padding: 12px 14px;
+            background: rgba(240, 236, 224, 0.5);
             border: 1px solid ${accentDivider};
           }
-          .terms-page2 p { margin: 0 0 8px; }
+          .terms-page2 p { margin: 0 0 7px; }
           .terms-page2 p:last-child { margin-bottom: 0; }
           .terms-page2 strong {
             color: ${accentMain};
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 9.5px;
+            letter-spacing: 0.4px;
+            font-size: 9px;
           }
 
           .signature-zone {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 8px;
+            gap: 14px;
+            margin-top: 7px;
             text-align: center;
           }
           .signature-line {
             width: 100%;
-            height: 38px;
+            height: 34px;
             border-bottom: 1px solid ${accentMain};
           }
           .signature-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8.5px;
-            letter-spacing: 1.8px;
+            font-size: 8px;
+            letter-spacing: 1.6px;
             text-transform: uppercase;
             color: #8a7a5c;
-            margin-top: 6px;
+            margin-top: 5px;
           }
 
           .footer-sign {
-            margin-top: 20px;
+            margin-top: 16px;
             font-family: 'Great Vibes', cursive;
-            font-size: 18px;
+            font-size: 16px;
             color: #4a3f28;
           }
           .footer-contact {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            letter-spacing: 1px;
+            font-size: 8.5px;
+            letter-spacing: 0.9px;
             color: #8a7a5c;
             margin-top: 3px;
           }
 
+          /* QR intégré directement dans la texture du fond : mix-blend-mode
+             rend le blanc du QR transparent (fusion "multiply" avec le fond),
+             ne laissant apparaître que les modules noirs du code. */
           .qr-block {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            isolation: isolate;
           }
-          .qr-block img { width: 56px; height: 56px; }
+          .qr-block img {
+            width: 54px;
+            height: 54px;
+            mix-blend-mode: multiply;
+            display: block;
+          }
           .qr-block p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 7.5px;
+            font-size: 7.3px;
             letter-spacing: 1px;
             text-transform: uppercase;
             color: #9c8a5c;
