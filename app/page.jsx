@@ -1015,6 +1015,8 @@ const PriceSimulation = () => {
     retour,
     shooting ? shootingHeures : 0
   );
+  const acompte = calculateAcompte(prix);
+  const solde = prix - acompte;
 
   return (
     <div className="space-y-6">
@@ -1061,6 +1063,18 @@ const PriceSimulation = () => {
             </div>
             <div className="bg-gradient-to-br from-rose-50 to-amber-50 rounded-xl p-6 border border-rose-200">
               <div className="text-center mb-4">
+              {distance > 0 && (
+                <div className="bg-white/70 rounded-lg p-3 mb-4 border border-rose-200 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-rose-700 font-medium uppercase tracking-wide">Acompte à la réservation (30%)</p>
+                    <p className="text-lg font-bold text-rose-700">{formatCurrency(acompte)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Solde restant</p>
+                    <p className="text-sm font-semibold text-gray-700">{formatCurrency(solde)}</p>
+                  </div>
+                </div>
+              )}
                 <div className="text-3xl font-bold text-rose-600 mb-2">{formatCurrency(prix)}</div>
                 <p className="text-rose-700 font-medium">Forfait Evenement Prestige</p>
               </div>
@@ -2068,15 +2082,7 @@ const generateFactureHTML = (booking) => {
       ? `<div><p class="block-label">Lieu du shooting</p><p class="block-value small">${booking.lieuShooting || "À confirmer"}</p></div>`
       : "";
 
-    const statusColors = {
-      "Payé": { bg: "#1f4d33", fg: "#8fe3af" },
-      "Avance": { bg: "#5a4a1a", fg: "#f0d488" },
-      "Non payé": { bg: "#5a1f1f", fg: "#f0a3a3" },
-      "En attente": { bg: "#4a3f1a", fg: "#e0c98a" },
-    };
-    const statusColor = statusColors[booking.paiement] || statusColors["Non payé"];
-
-    const accentMain = "#3d2f1c";
+    const accentMain = "#2b2013";
     const accentDivider = "#c6a869";
     const rsvpTitle = "Règlement";
     const totalLabel = "Reste à payer";
@@ -2139,10 +2145,11 @@ const generateFactureHTML = (booking) => {
       ${shootingRow}
       <div class="price-line"><span class="lab">Avance versée</span><span>${formatCurrency(booking.avance || 0)}</span></div>
       <div class="price-total">${totalLabel} — ${formatCurrency(totalValue)}</div>
-      <span class="status-pill" style="background:${statusColor.bg}; color:${statusColor.fg};">${booking.paiement}</span>
 
       <div class="qr-block">
-        <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
+        <div class="qr-card">
+          <img src="${FAKHAMA_QR_BASE64}" alt="QR Facebook Fakhama" />
+        </div>
         <p>Suivez-nous sur Facebook</p>
       </div>
     `;
@@ -2203,11 +2210,9 @@ const generateFactureHTML = (booking) => {
             margin: 0;
             padding: 10mm 0;
             background: #cfc4a8;
-            color: #4a3f30;
+            color: #2b2013;
           }
 
-          /* La photo du cadre couvre toute la page en fond, le texte est
-             posé en transparence par-dessus — aucune "boîte" séparée. */
           .page {
             position: relative;
             width: 210mm;
@@ -2223,9 +2228,6 @@ const generateFactureHTML = (booking) => {
           }
           .page:last-child { page-break-after: auto; }
 
-          /* Contenu ancré en HAUT (et non centré verticalement) : ainsi, quand
-             le shooting ajoute des lignes, le contenu ne grandit que vers le
-             bas et ne pousse jamais le logo sous le motif du cadre. */
           .content {
             position: absolute;
             top: 15%; left: 15%; right: 15%; bottom: 5%;
@@ -2245,7 +2247,7 @@ const generateFactureHTML = (booking) => {
             font-size: 9px;
             letter-spacing: 3px;
             text-transform: uppercase;
-            color: #9c8a5c;
+            color: #6b5a34;
             margin: 0 0 4px;
           }
           .logo {
@@ -2259,10 +2261,10 @@ const generateFactureHTML = (booking) => {
             font-size: 11.5px;
             letter-spacing: 1.8px;
             text-transform: uppercase;
-            color: #6b5c3f;
+            color: #4a3d24;
             line-height: 1.6;
             margin: 12px 0 4px;
-            font-weight: 500;
+            font-weight: 600;
           }
 
           .clientname {
@@ -2285,16 +2287,16 @@ const generateFactureHTML = (booking) => {
             font-size: 12.5px;
             letter-spacing: 2.6px;
             text-transform: uppercase;
-            color: #4a3f30;
+            color: ${accentMain};
           }
-          .datewrap .ddim { font-size: 17px; font-weight: 500; }
+          .datewrap .ddim { font-size: 17px; font-weight: 600; }
           .datewrap .bar { width: 1px; height: 16px; background: ${accentDivider}; }
 
           .timeline {
             font-size: 9.5px;
             letter-spacing: 0.9px;
             text-transform: uppercase;
-            color: #7a6f56;
+            color: #4f4330;
             margin: 5px 0 14px;
           }
 
@@ -2310,16 +2312,18 @@ const generateFactureHTML = (booking) => {
             font-size: 8px;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: #9c7f3f;
+            color: #6b4f22;
             margin: 0 0 4px;
+            font-weight: 600;
           }
           .block-value {
             font-size: 12px;
-            color: #3d2f1c;
+            color: #241c11;
             line-height: 1.4;
             margin: 0 0 3px;
+            font-weight: 500;
           }
-          .block-value.small { font-size: 10.5px; color: #6b5c3f; }
+          .block-value.small { font-size: 10.5px; color: #3a2f1e; }
 
           .infogrid {
             display: grid;
@@ -2341,26 +2345,16 @@ const generateFactureHTML = (booking) => {
             justify-content: center;
             gap: 7px;
             font-size: 11px;
-            color: #5c5140;
+            color: #2b2013;
             padding: 2px 0;
+            font-weight: 500;
           }
-          .price-line .lab { letter-spacing: 0.8px; text-transform: uppercase; font-size: 8.8px; color: #8a7a52; align-self: center; }
+          .price-line .lab { letter-spacing: 0.8px; text-transform: uppercase; font-size: 8.8px; color: #574a2d; align-self: center; font-weight: 600; }
           .price-total {
             font-size: 16px;
             color: ${accentMain};
             margin: 8px 0 2px;
-            font-weight: 600;
-          }
-          .status-pill {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 8.3px;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            font-weight: 500;
+            font-weight: 700;
           }
 
           .terms-page2 {
@@ -2368,10 +2362,10 @@ const generateFactureHTML = (booking) => {
             font-family: 'Montserrat', sans-serif;
             font-size: 9px;
             line-height: 1.7;
-            color: #5c5140;
+            color: #2b2013;
             text-align: left;
             padding: 12px 14px;
-            background: rgba(240, 236, 224, 0.5);
+            background: rgba(245, 241, 230, 0.7);
             border: 1px solid ${accentDivider};
           }
           .terms-page2 p { margin: 0 0 7px; }
@@ -2400,38 +2394,45 @@ const generateFactureHTML = (booking) => {
             font-size: 8px;
             letter-spacing: 1.6px;
             text-transform: uppercase;
-            color: #8a7a5c;
+            color: #574a2d;
             margin-top: 5px;
+            font-weight: 600;
           }
 
           .footer-sign {
             margin-top: 16px;
             font-family: 'Great Vibes', cursive;
             font-size: 16px;
-            color: #4a3f28;
+            color: #2b2013;
           }
           .footer-contact {
             font-family: 'Montserrat', sans-serif;
             font-size: 8.5px;
             letter-spacing: 0.9px;
-            color: #8a7a5c;
+            color: #574a2d;
             margin-top: 3px;
+            font-weight: 500;
           }
 
-          /* QR intégré directement dans la texture du fond : mix-blend-mode
-             rend le blanc du QR transparent (fusion "multiply" avec le fond),
-             ne laissant apparaître que les modules noirs du code. */
+          /* QR sur carte blanche nette : lisible et scannable partout,
+             sans mélange avec le motif du fond. */
           .qr-block {
-            margin-top: 10px;
+            margin-top: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            isolation: isolate;
           }
-          .qr-block img {
+          .qr-card {
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            display: inline-block;
+            line-height: 0;
+          }
+          .qr-card img {
             width: 54px;
             height: 54px;
-            mix-blend-mode: multiply;
             display: block;
           }
           .qr-block p {
@@ -2439,8 +2440,9 @@ const generateFactureHTML = (booking) => {
             font-size: 7.3px;
             letter-spacing: 1px;
             text-transform: uppercase;
-            color: #9c8a5c;
-            margin: 4px 0 0;
+            color: #574a2d;
+            margin: 5px 0 0;
+            font-weight: 600;
           }
 
           @media print {
@@ -2474,7 +2476,6 @@ const generateFactureHTML = (booking) => {
     downloadHTML(factureHTML, `facture-FWE-${booking.client}-${booking.date}.html`);
     showNotification("Facture prestige générée avec succès", "success");
   };
-
   // Télécharge une chaîne HTML sous forme de fichier .html (utilisé par le devis et la facture).
   const downloadHTML = (html, filename) => {
     const blob = new Blob([html], { type: "text/html; charset=utf-8" });
