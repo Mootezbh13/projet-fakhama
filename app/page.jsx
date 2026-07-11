@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
+import html2pdf from "html2pdf.js";
+import * as XLSX from "xlsx";
 
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
@@ -2034,8 +2036,8 @@ export default function CarRentalManagement() {
       </html>
     `;
 
-    downloadHTML(devisHTML, `devis-FWE-${booking.client}-${booking.date}.html`);
-    showNotification("Devis généré avec succès", "success");
+    downloadAsPDF(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`);
+    showNotification("Devis PDF généré avec succès", "success");
   };
 
   // ── FACTURE — gabarit "carton d'invitation" doré (inchangé) + logo + QR ─────
@@ -2466,17 +2468,54 @@ const generateFactureHTML = (booking) => {
     showNotification("Facture prestige générée avec succès", "success");
   };
   // Télécharge une chaîne HTML sous forme de fichier .html (utilisé par le devis et la facture).
-  const downloadHTML = (html, filename) => {
-    const blob = new Blob([html], { type: "text/html; charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  const downloadAsPDF = async (html, filename) => {
+  const parser = new DOMParser();
+  const parsedDoc = parser.parseFromString(html, "text/html");
+
+  // Charge les polices Google Fonts du document généré
+  const linkEls = [];
+  parsedDoc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+    const el = document.createElement("link");
+    el.rel = "stylesheet";
+    el.href = link.href;
+    document.head.appendChild(el);
+    linkEls.push(el);
+  });
+
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.left = "-99999px";
+  container.style.top = "0";
+
+  parsedDoc.querySelectorAll("style").forEach((styleEl) => {
+    container.appendChild(styleEl.cloneNode(true));
+  });
+  Array.from(parsedDoc.body.children).forEach((child) => {
+    container.appendChild(child.cloneNode(true));
+  });
+
+  document.body.appendChild(container);
+
+  try {
+    await document.fonts.ready;
+    await new Promise((r) => setTimeout(r, 500)); // laisse le temps aux polices/images
+
+    await html2pdf()
+      .set({
+        margin: 0,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"] },
+      })
+      .from(container)
+      .save();
+  } finally {
+    document.body.removeChild(container);
+    linkEls.forEach((el) => document.head.removeChild(el));
+  }
+};
 
   // Raccourci dédié pour générer un devis (utilisé sur les réservations "En attente").
   const generateDevisPDF = (booking) => generateInvoiceEvenementPDF(booking, "devis");
