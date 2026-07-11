@@ -2214,17 +2214,10 @@ const generateFactureHTML = (booking) => {
             position: relative;
             width: 210mm;
             height: 297mm;
-            .page-frame {
-             position: absolute;
-             inset: 0;
-             width: 100%;
-             height: 100%;
-             z-index: 0;
-          }
-
-            .content {
-             z-index: 1;
-          }
+            background-image: url("${window.location.origin}/facture-frame.jpg");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             margin: 0 auto 10mm;
             page-break-after: always;
@@ -2442,6 +2435,10 @@ const generateFactureHTML = (booking) => {
           }
 
           @media print {
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
             html, body { background: white; padding: 0; }
             .page { box-shadow: none; margin: 0; }
           }
@@ -2450,7 +2447,6 @@ const generateFactureHTML = (booking) => {
       <body>
 
         <div class="page">
-          <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" />
           <div class="content">
             <div class="content-inner">
               ${page1Content}
@@ -2459,8 +2455,7 @@ const generateFactureHTML = (booking) => {
         </div>
 
         <div class="page">
-            <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" />
-            <div class="content">
+          <div class="content">
             <div class="content-inner">
               ${page2Content}
             </div>
