@@ -2158,7 +2158,7 @@ const generateFactureHTML = (booking) => {
 
       <p class="rsvp-title" style="margin-top:16px;">Conditions générales</p>
 
-      <div class="terms-page2">
+      <div class="terms-page2" style="background: transparent !important; background-color: transparent !important;">
         <p><strong>Annulation</strong> — L'avance n'est pas remboursée en cas d'annulation moins de 7 jours avant la date prévue.</p>
         <p><strong>Retard</strong> — Majoration de 50 DT par heure de retard.</p>
         <p><strong>Paiement</strong> — Le contrat est annulé si le montant total n'est pas réglé à l'arrivée du chauffeur.</p>
@@ -2362,15 +2362,15 @@ const generateFactureHTML = (booking) => {
           }
 
           .terms-page2 {
-            margin-top: 12px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            line-height: 1.7;
-            color: #2b2013;
-            text-align: left;
-            padding: 12px 14px;
-            background: rgba(245, 241, 230, 0.7);
-            border: 1px solid ${accentDivider};
+           margin-top: 12px;
+           font-family: 'Montserrat', sans-serif;
+           font-size: 9px;
+           line-height: 1.7;
+           color: #2b2013;
+           text-align: left;
+           padding: 12px 14px;
+           background-color: transparent !important;
+           border: 1px solid ${accentDivider};
           }
           .terms-page2 p { margin: 0 0 7px; }
           .terms-page2 p:last-child { margin-bottom: 0; }
