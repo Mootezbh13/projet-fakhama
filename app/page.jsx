@@ -2459,7 +2459,8 @@ const generateFactureHTML = (booking) => {
         </div>
 
         <div class="page">
-          <div class="content">
+            <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" />
+            <div class="content">
             <div class="content-inner">
               ${page2Content}
             </div>
