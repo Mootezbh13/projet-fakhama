@@ -2214,10 +2214,17 @@ const generateFactureHTML = (booking) => {
             position: relative;
             width: 210mm;
             height: 297mm;
-            background-image: url(${FACTURE_FRAME_BASE64});
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
+            .page-frame {
+             position: absolute;
+             inset: 0;
+             width: 100%;
+             height: 100%;
+             z-index: 0;
+          }
+
+            .content {
+             z-index: 1;
+          }
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             margin: 0 auto 10mm;
             page-break-after: always;
@@ -2443,6 +2450,7 @@ const generateFactureHTML = (booking) => {
       <body>
 
         <div class="page">
+          <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" />
           <div class="content">
             <div class="content-inner">
               ${page1Content}
