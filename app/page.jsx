@@ -4,11 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
-// TODO sécurité : idéalement, sortir ces valeurs en variables d'environnement
-// (process.env.REACT_APP_SUPABASE_URL / _ANON_KEY ou import.meta.env selon le bundler)
-// plutôt que de les coder en dur, même si la clé "anon" est publique par design.
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tcakgvztbvtisgegqxch.supabase.co";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjYWtndnp0YnZ0aXNnZWdxeGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwOTUxNTYsImV4cCI6MjA5ODY3MTE1Nn0.m4s9IDcr0OBlkGSWJ-JmfWC22iHl4oioodi1QjYbQ88";
+// Les valeurs viennent du fichier .env.local (jamais committé).
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -448,15 +446,14 @@ const InsuranceExpiryWarning = ({ assurances }) => {
   );
 };
 
-// Génère le message WhatsApp de rappel (J-3 ou J-1) prêt à envoyer
-const buildRappelMessage = (b, daysLeft) => {
+// Génère le message WhatsApp de rappel J-1 (veille de l'événement)
+const buildRappelMessage = (b) => {
   const decorationLabel = DECORATION_OPTIONS.find((d) => d.value === b.decoration)?.label || "Rubans traditionnels";
   const itineraire = b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet || "Tunis";
-  const label = daysLeft === 1 ? "demain" : `dans ${daysLeft} jours`;
   return `🌸 *Fakhama Weddings & Events* 🌸
 _BMW Série 3 2026_
 
-🔔 *Rappel — votre événement est ${label} !*
+🔔 *Rappel — votre événement est demain !*
 
 👤 *Client :* ${b.client}
 📅 *Date :* ${b.date} à ${b.heure}
@@ -492,7 +489,7 @@ const UpcomingEventReminders = ({ bookings }) => {
   if (upcoming.length === 0) return null;
 
   const sendRappel = (b) => {
-    const msg = buildRappelMessage(b, b.daysLeft);
+    const msg = buildRappelMessage(b);
     const phone = b.phone ? b.phone.replace(/\D/g, "") : "";
     const url = phone
       ? `https://wa.me/${phone.startsWith("216") ? phone : "216" + phone}?text=${encodeURIComponent(msg)}`
@@ -507,7 +504,7 @@ const UpcomingEventReminders = ({ bookings }) => {
         const itineraire = b.trajetStops
           ? ["Tunis", ...b.trajetStops].join(" → ")
           : b.trajet || "Tunis";
-        const showRappel = b.daysLeft >= 1 && b.daysLeft <= 3 && b.phone;
+        const showRappel = b.daysLeft === 1 && b.phone;
         return (
           <div
             key={b.id}
@@ -531,12 +528,12 @@ const UpcomingEventReminders = ({ bookings }) => {
               <button
                 onClick={() => sendRappel(b)}
                 className="flex items-center gap-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg font-semibold shrink-0"
-                title={`Envoyer rappel J-${b.daysLeft} à ${b.client}`}
+                title={`Envoyer rappel J-1 à ${b.client}`}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
-                Rappel J-{b.daysLeft}
+                Rappel J-1
               </button>
             )}
             <Badge variant={b.daysLeft === 0 ? "destructive" : isUrgent ? "destructive" : "warning"}>
@@ -556,40 +553,16 @@ const AllReminders = ({ bookings, assurances }) => (
   </>
 );
 
-// Bouton WhatsApp unique — visible uniquement pour les statuts "Avance" ou "Payé".
-// Envoie les détails de réservation + récapitulatif de la facture en un seul message.
+// Bouton WhatsApp — visible uniquement pour les statuts "Avance" ou "Payé".
+// Un clic ouvre WhatsApp avec le message pré-rempli (détails + facture).
+// Deux boutons sont affichés :
+//   1. 📋 Détails   → confirmation de réservation + itinéraire
+//   2. 📄 Facture   → récapitulatif financier complet (N°, prix, avance, reste)
+// Séparés pour contourner la limite de longueur de l'URL wa.me (~2000 caractères encodés).
 const WhatsAppButton = ({ booking, docNum }) => {
   if (booking.paiement !== "Avance" && booking.paiement !== "Payé") return null;
 
-  const handleWhatsApp = () => {
-    const decorationLabel =
-      DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
-
-    const message = `🌸 *Fakhama Weddings & Events* 🌸
-_BMW Série 3 2026_
-
-✅ *Confirmation de Réservation*
-
-👤 *Client :* ${booking.client}
-📅 *Date :* ${booking.date} à ${booking.heure}
-📍 *Itinéraire :* ${booking.trajetStops ? ["Tunis", ...booking.trajetStops].join(" → ") : booking.trajet}
-🛣️ *Distance totale :* ${booking.distance} km
-🔄 *Service retour :* ${booking.retour ? "Oui" : "Non"}${booking.retour && booking.lieuRetour ? ` (${booking.lieuRetour})` : ""}
-${booking.shootingHeures ? `📸 *Shooting :* ${booking.shootingHeures}h (${formatCurrency(booking.shootingCost || 0)})${booking.lieuShooting ? ` — ${booking.lieuShooting}` : ""}\n` : ""}
-💍 *Détails événement :*
-- Marié : ${booking.lieuMarie || "À confirmer"}
-- Mariée : ${booking.lieuMariee || "À confirmer"}
-- Salle : ${booking.salleFetes || "À confirmer"}
-- Décoration : ${decorationLabel}
-
-📄 *Facture N° ${docNum || "—"}*
-💰 Prix total : ${formatCurrency(booking.prix)}
-✅ Avance versée : ${formatCurrency(booking.avance || 0)}
-${booking.reste > 0 ? `⏳ Reste à payer : ${formatCurrency(booking.reste)}\n` : ""}🏷️ Statut : ${booking.paiement}
-
-📞 Contact : +216 93 993 619
-_Merci pour votre confiance ✨_`.trim();
-
+  const openWA = (message) => {
     const phone = booking.phone ? booking.phone.replace(/\D/g, "") : "";
     const url = phone
       ? `https://wa.me/${phone.startsWith("216") ? phone : "216" + phone}?text=${encodeURIComponent(message)}`
@@ -597,17 +570,80 @@ _Merci pour votre confiance ✨_`.trim();
     window.open(url, "_blank");
   };
 
+  const handleDetails = () => {
+    const decorationLabel =
+      DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
+    const itineraire = booking.trajetStops
+      ? ["Tunis", ...booking.trajetStops].join(" → ")
+      : booking.trajet || "Tunis";
+    const message = [
+      "🌸 *Fakhama Weddings & Events* 🌸",
+      "_BMW Série 3 2026_",
+      "",
+      "✅ *Confirmation de Réservation*",
+      "",
+      `👤 *Client :* ${booking.client}`,
+      `📅 *Date :* ${booking.date} à ${booking.heure}`,
+      `📍 *Itinéraire :* ${itineraire}`,
+      `🛣️ *Distance :* ${booking.distance} km`,
+      `🔄 *Retour :* ${booking.retour ? `Oui${booking.lieuRetour ? ` (${booking.lieuRetour})` : ""}` : "Non"}`,
+      booking.shootingHeures ? `📸 *Shooting :* ${booking.shootingHeures}h${booking.lieuShooting ? ` — ${booking.lieuShooting}` : ""}` : null,
+      "",
+      "💍 *Détails événement :*",
+      `• Marié : ${booking.lieuMarie || "À confirmer"}`,
+      `• Mariée : ${booking.lieuMariee || "À confirmer"}`,
+      `• Salle : ${booking.salleFetes || "À confirmer"}`,
+      `• Décoration : ${decorationLabel}`,
+      "",
+      "📞 +216 93 993 619",
+    ].filter((l) => l !== null).join("\n");
+    openWA(message);
+  };
+
+  const handleFacture = () => {
+    const message = [
+      "🌸 *Fakhama Weddings & Events* 🌸",
+      "_BMW Série 3 2026_",
+      "",
+      `📄 *Facture N° ${docNum || "—"}*`,
+      "",
+      `👤 ${booking.client}`,
+      `📅 ${booking.date} à ${booking.heure}`,
+      "",
+      `💰 *Prix total :* ${formatCurrency(booking.prix)}`,
+      `✅ *Avance versée :* ${formatCurrency(booking.avance || 0)}`,
+      booking.reste > 0 ? `⏳ *Reste à payer :* ${formatCurrency(booking.reste)}` : `✅ *Intégralement réglé*`,
+      `🏷️ *Statut :* ${booking.paiement}`,
+      "",
+      "📞 +216 93 993 619",
+      "_Merci pour votre confiance ✨_",
+    ].join("\n");
+    openWA(message);
+  };
+
+  const WaIcon = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  );
+
   return (
-    <button
-      onClick={handleWhatsApp}
-      className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs flex items-center gap-1"
-      title="Envoyer détails + facture via WhatsApp"
-    >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-      </svg>
-      WhatsApp
-    </button>
+    <div className="flex gap-1">
+      <button
+        onClick={handleDetails}
+        className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs flex items-center gap-1"
+        title="Envoyer confirmation de réservation par WhatsApp"
+      >
+        <WaIcon /> Détails
+      </button>
+      <button
+        onClick={handleFacture}
+        className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs flex items-center gap-1"
+        title="Envoyer récapitulatif facture par WhatsApp"
+      >
+        <WaIcon /> Facture
+      </button>
+    </div>
   );
 };
 
@@ -635,7 +671,7 @@ const ViewModeToggle = ({ mode, setMode }) => (
 // Carte compacte affichant une réservation, utilisée par la vue "Liste" (mobile)
 // des onglets Réservations et Archive. `archived` masque les actions non pertinentes
 // (devis/facture bascule automatiquement, pas de bouton "reste à payer" en avant).
-const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum }) => {
+const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum, onStatusChange }) => {
   const itineraire = b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet;
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
@@ -644,7 +680,22 @@ const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum 
           <p className="font-semibold text-gray-900">{b.client}</p>
           {b.phone && <p className="text-xs text-gray-500">{b.phone}</p>}
         </div>
-        <Badge variant={paiementVariant(b.paiement)}>{b.paiement}</Badge>
+        {onStatusChange ? (
+          <select
+            value={b.paiement}
+            onChange={(e) => onStatusChange(b, e.target.value)}
+            className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 ${
+              b.paiement === "Payé" ? "bg-green-100 text-green-800" :
+              b.paiement === "Avance" ? "bg-gray-100 text-gray-800" :
+              b.paiement === "En attente" ? "bg-amber-100 text-amber-800" :
+              "bg-red-100 text-red-800"
+            }`}
+          >
+            {PAIEMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        ) : (
+          <Badge variant={paiementVariant(b.paiement)}>{b.paiement}</Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-sm">
@@ -1585,6 +1636,32 @@ const AdvancedStats = ({ bookings }) => {
     acc[booking.paiement] = (acc[booking.paiement] || 0) + (booking.paiement === "Payé" ? booking.prix : booking.avance || 0);
     return acc;
   }, {});
+
+  // ── Taux de conversion devis → réservation ─────────────────────────────
+  // Un devis converti = réservation qui est passée de "En attente" à autre chose
+  // (Avance, Payé). Ici on utilise le snapshot actuel : total devis envoyés (toutes
+  // statuts confondus) vs total confirmés (≠ "En attente" et ≠ "Non payé").
+  const totalBookings   = bookings.length;
+  const totalDevis      = bookings.filter((b) => b.paiement === "En attente").length;
+  const totalConvertis  = bookings.filter((b) => b.paiement === "Avance" || b.paiement === "Payé").length;
+  const totalNonPayes   = bookings.filter((b) => b.paiement === "Non payé").length;
+  // Taux de conversion : confirmés / (confirmés + non payés + en attente)
+  const baseConversion  = totalConvertis + totalNonPayes + totalDevis;
+  const tauxConversion  = baseConversion > 0 ? Math.round((totalConvertis / baseConversion) * 100) : 0;
+  // Valeur perdue : réservations "Non payé" × prix moyen
+  const avgPrix         = totalBookings > 0 ? bookings.reduce((s, b) => s + b.prix, 0) / totalBookings : 0;
+  const valeurPerdue    = totalNonPayes * avgPrix;
+  // Délai moyen de conversion : non calculable sans historique de changement de statut,
+  // on affiche donc le nombre de jours restants avant l'événement pour les devis en cours.
+  const devisEnCours = bookings
+    .filter((b) => b.paiement === "En attente")
+    .map((b) => {
+      const jours = Math.ceil((new Date(b.date) - new Date()) / (1000 * 60 * 60 * 24));
+      return { client: b.client, date: b.date, jours };
+    })
+    .filter((b) => b.jours >= 0)
+    .sort((a, b) => a.jours - b.jours);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1620,6 +1697,71 @@ const AdvancedStats = ({ bookings }) => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* ── Taux de conversion ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-4">🎯 Taux de Conversion Devis → Réservation</h4>
+          {/* Barre de progression */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-gray-600">Confirmés ({totalConvertis})</span>
+              <span className="font-bold text-gray-900">{tauxConversion}%</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full transition-all ${tauxConversion >= 70 ? "bg-green-500" : tauxConversion >= 40 ? "bg-amber-500" : "bg-red-500"}`}
+                style={{ width: `${tauxConversion}%` }}
+              />
+            </div>
+          </div>
+          {/* Détail */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-green-50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-green-600">{totalConvertis}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Confirmés (Avance + Payé)</p>
+            </div>
+            <div className="bg-red-50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-red-500">{totalNonPayes}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Non payés (perdus)</p>
+            </div>
+            <div className="bg-amber-50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-amber-600">{totalDevis}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Devis en attente</p>
+            </div>
+            <div className="bg-rose-50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-rose-600">{formatCurrency(valeurPerdue)}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Valeur estimée perdue</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Devis urgents — événement proche */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-4">⏳ Devis en Attente — par urgence</h4>
+          {devisEnCours.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">Aucun devis en attente avec date future</p>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {devisEnCours.map((d, i) => (
+                <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{d.client}</p>
+                    <p className="text-xs text-gray-500">{d.date}</p>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                    d.jours <= 3  ? "bg-red-100 text-red-700" :
+                    d.jours <= 7  ? "bg-amber-100 text-amber-700" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>
+                    J-{d.jours}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1700,6 +1842,7 @@ export default function CarRentalManagement() {
   const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
   // Affichage tableau (desktop) ou liste de cartes (mobile) — choix manuel de l'utilisateur.
   const [reservationsView, setReservationsView] = useState("table");
+  const [showReservationsCalendar, setShowReservationsCalendar] = useState(false);
   const [archiveView, setArchiveView] = useState("table");
   const [activeTab, setActiveTab] = useState("simulation");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -3462,6 +3605,25 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
             <>
               <AllReminders bookings={bookings} assurances={assurances} />
 
+              {/* Calendrier des réservations — toggle */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowReservationsCalendar((v) => !v)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <span>📅</span>
+                  {showReservationsCalendar ? "Masquer le calendrier" : "Afficher le calendrier"}
+                </button>
+                {showReservationsCalendar && (
+                  <div className="mt-3">
+                    <CalendarView
+                      bookings={bookings}
+                      onDayClick={(dayBookings) => setSelectedDayBookings(dayBookings)}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
                   <div>
@@ -3709,6 +3871,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         key={b.id}
                         booking={b}
                         docNum={getDocNumber(b)}
+                        onStatusChange={handleQuickStatusChange}
                         onDevis={generateDevisPDF}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
@@ -3879,6 +4042,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         key={b.id}
                         booking={b}
                         docNum={getDocNumber(b)}
+                        onStatusChange={handleQuickStatusChange}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
                         onDelete={handleDeleteBooking}
