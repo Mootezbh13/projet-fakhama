@@ -307,6 +307,7 @@ const SIDEBAR_ITEMS = [
   { id: "simulation", label: "Simulation", icon: "💰" },
   { id: "reservations", label: "Réservations", icon: "💍" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "comptabilite", label: "Comptabilité", icon: "🧾" },
   { id: "maintenance", label: "Maintenance", icon: "🔧" },
   { id: "assurances", label: "Assurances", icon: "🛡️" },
   { id: "vignettes", label: "Vignettes", icon: "📋" },
@@ -1003,11 +1004,20 @@ const LoginForm = ({ onLogin, error }) => {
 };
 
 // ── PRICE SIMULATION ──────────────────────────────────────────────────────────
-const PriceSimulation = () => {
+const PriceSimulation = ({ bookings = [] }) => {
   const [stops, setStops] = useState(["Tunis"]);
   const [retour, setRetour] = useState(false);
   const [shooting, setShooting] = useState(false);
   const [shootingHeures, setShootingHeures] = useState(1);
+  const [checkDate, setCheckDate] = useState("");
+
+  // Vérifie la disponibilité de la date saisie
+  const dateStatus = (() => {
+    if (!checkDate) return null;
+    const matches = bookings.filter((b) => b.date === checkDate && b.paiement !== "Non payé");
+    if (matches.length === 0) return { free: true };
+    return { free: false, bookings: matches };
+  })();
 
   const { distance, prixBase, shootingCost, prix } = calculateTotalPrice(
     stops,
@@ -1116,6 +1126,82 @@ const PriceSimulation = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Vérification de disponibilité ── */}
+      <div className="bg-white rounded-lg shadow-lg border border-rose-100">
+        <div className="bg-gradient-to-r from-rose-50 to-amber-50 px-6 py-4 border-b border-rose-200">
+          <h2 className="text-xl font-bold text-rose-800">📅 Vérifier une disponibilité</h2>
+          <p className="text-sm text-rose-600 mt-0.5">Entrez une date pour voir si elle est libre ou déjà réservée</p>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <input
+              type="date"
+              value={checkDate}
+              onChange={(e) => setCheckDate(e.target.value)}
+              className="px-4 py-2 border-2 border-rose-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-gray-900 text-base"
+            />
+            {checkDate && (
+              <span className="text-sm text-gray-500">
+                {new Date(checkDate).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              </span>
+            )}
+          </div>
+
+          {dateStatus && (
+            <div className={`mt-4 rounded-xl p-4 border ${dateStatus.free ? "bg-green-50 border-green-200" : dateStatus.bookings?.every((b) => b.paiement === "En attente") ? "bg-orange-50 border-orange-200" : "bg-red-50 border-red-200"}`}>
+              {dateStatus.free ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">✅</span>
+                  <div>
+                    <p className="font-semibold text-green-800">Date disponible !</p>
+                    <p className="text-sm text-green-700">Aucune réservation confirmée ce jour-là.</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {(() => {
+                    const allPending = dateStatus.bookings.every((b) => b.paiement === "En attente");
+                    const hasPending = dateStatus.bookings.some((b) => b.paiement === "En attente");
+                    const hasConfirmed = dateStatus.bookings.some((b) => b.paiement !== "En attente");
+                    return (
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl">{allPending ? "🟠" : "🚫"}</span>
+                        <div>
+                          <p className={`font-semibold ${allPending ? "text-orange-800" : "text-red-800"}`}>
+                            {allPending ? "À vérifier — devis en attente de confirmation" : "Date déjà réservée"}
+                          </p>
+                          <p className={`text-sm ${allPending ? "text-orange-700" : "text-red-700"}`}>
+                            {dateStatus.bookings.length} entrée{dateStatus.bookings.length > 1 ? "s" : ""} ce jour-là
+                            {hasPending && hasConfirmed ? " (dont des devis non confirmés)" : ""}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div className="space-y-2">
+                    {dateStatus.bookings.map((b) => {
+                      const isPending = b.paiement === "En attente";
+                      return (
+                      <div key={b.id} className={`bg-white rounded-lg px-4 py-2 border flex items-center justify-between ${isPending ? "border-orange-200" : "border-red-200"}`}>
+                        <div>
+                          <span className="font-medium text-gray-900">{b.client}</span>
+                          {b.phone && <span className="text-sm text-gray-500 ml-2">· {b.phone}</span>}
+                          <span className="text-sm text-gray-500 ml-2">· {b.heure}</span>
+                        </div>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${b.paiement === "Payé" ? "bg-green-100 text-green-700" : b.paiement === "Avance" ? "bg-amber-100 text-amber-700" : b.paiement === "En attente" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-600"}`}>
+                          {b.paiement}
+                        </span>
+                      </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1536,9 +1622,10 @@ export default function CarRentalManagement() {
   const [draftBooking, setDraftBooking] = useState(null);
   const autoSaveTimer = useRef(null);
 
-  // Pagination du tableau des réservations
+  // Pagination réservations & archive
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+  const [archivePage, setArchivePage] = useState(1);
+  const itemsPerPage = 10;
 
   const [newBookingStops, setNewBookingStops] = useState(["Tunis"]);
   const [editBookingStops, setEditBookingStops] = useState(["Tunis"]);
@@ -2241,11 +2328,12 @@ const generateFactureHTML = (booking) => {
 
           .brandline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            letter-spacing: 3px;
+            font-size: 10px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
-            color: #6b5a34;
-            margin: 0 0 4px;
+            color: #5a4a28;
+            margin: 0 0 5px;
+            font-weight: 500;
           }
           .logo {
             display: block;
@@ -2255,10 +2343,10 @@ const generateFactureHTML = (booking) => {
             margin: 0 auto 8px;
           }
           .intro {
-            font-size: 11.5px;
+            font-size: 12px;
             letter-spacing: 1.8px;
             text-transform: uppercase;
-            color: #4a3d24;
+            color: #3b2f16;
             line-height: 1.6;
             margin: 12px 0 4px;
             font-weight: 600;
@@ -2266,7 +2354,7 @@ const generateFactureHTML = (booking) => {
 
           .clientname {
             font-family: 'Great Vibes', cursive;
-            font-size: 34px;
+            font-size: 36px;
             color: ${accentMain};
             margin: 4px 0 12px;
             line-height: 1;
@@ -2281,20 +2369,22 @@ const generateFactureHTML = (booking) => {
             margin: 8px 0 3px;
           }
           .datewrap .dpart {
-            font-size: 12.5px;
-            letter-spacing: 2.6px;
+            font-size: 13px;
+            letter-spacing: 2.4px;
             text-transform: uppercase;
             color: ${accentMain};
+            font-weight: 500;
           }
-          .datewrap .ddim { font-size: 17px; font-weight: 600; }
-          .datewrap .bar { width: 1px; height: 16px; background: ${accentDivider}; }
+          .datewrap .ddim { font-size: 18px; font-weight: 700; }
+          .datewrap .bar { width: 1px; height: 18px; background: ${accentDivider}; }
 
           .timeline {
-            font-size: 9.5px;
-            letter-spacing: 0.9px;
+            font-size: 10.5px;
+            letter-spacing: 0.8px;
             text-transform: uppercase;
-            color: #4f4330;
+            color: #3b2f16;
             margin: 5px 0 14px;
+            font-weight: 500;
           }
 
           .divider {
@@ -2306,21 +2396,21 @@ const generateFactureHTML = (booking) => {
 
           .block-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8px;
-            letter-spacing: 2px;
+            font-size: 9px;
+            letter-spacing: 1.8px;
             text-transform: uppercase;
-            color: #6b4f22;
+            color: #5a4220;
             margin: 0 0 4px;
-            font-weight: 600;
+            font-weight: 700;
           }
           .block-value {
-            font-size: 12px;
-            color: #241c11;
-            line-height: 1.4;
+            font-size: 13px;
+            color: #1e1609;
+            line-height: 1.45;
             margin: 0 0 3px;
-            font-weight: 500;
+            font-weight: 600;
           }
-          .block-value.small { font-size: 10.5px; color: #3a2f1e; }
+          .block-value.small { font-size: 11.5px; color: #2e2410; font-weight: 500; }
 
           .infogrid {
             display: grid;
@@ -2332,7 +2422,7 @@ const generateFactureHTML = (booking) => {
 
           .rsvp-title {
             font-family: 'Great Vibes', cursive;
-            font-size: 22px;
+            font-size: 24px;
             color: ${accentMain};
             margin: 2px 0 7px;
           }
@@ -2340,29 +2430,36 @@ const generateFactureHTML = (booking) => {
           .price-line {
             display: flex;
             justify-content: center;
-            gap: 7px;
-            font-size: 11px;
-            color: #2b2013;
-            padding: 2px 0;
-            font-weight: 500;
+            gap: 8px;
+            font-size: 12px;
+            color: #1e1609;
+            padding: 3px 0;
+            font-weight: 600;
           }
-          .price-line .lab { letter-spacing: 0.8px; text-transform: uppercase; font-size: 8.8px; color: #574a2d; align-self: center; font-weight: 600; }
+          .price-line .lab {
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            font-size: 10px;
+            color: #4a3a18;
+            align-self: center;
+            font-weight: 700;
+          }
           .price-total {
-            font-size: 16px;
+            font-size: 17px;
             color: ${accentMain};
-            margin: 8px 0 2px;
+            margin: 9px 0 2px;
             font-weight: 700;
           }
 
           .terms-page2 {
             margin-top: 12px;
             font-family: 'Montserrat', sans-serif;
-            font-size: 9px;
-            line-height: 1.7;
-            color: #2b2013;
+            font-size: 10px;
+            line-height: 1.75;
+            color: #1e1609;
             text-align: left;
-            padding: 12px 14px;
-            background: rgba(245, 241, 230, 0.7);
+            padding: 13px 16px;
+            background: rgba(245, 241, 230, 0.75);
             border: 1px solid ${accentDivider};
           }
           .terms-page2 p { margin: 0 0 7px; }
@@ -2371,7 +2468,8 @@ const generateFactureHTML = (booking) => {
             color: ${accentMain};
             text-transform: uppercase;
             letter-spacing: 0.4px;
-            font-size: 9px;
+            font-size: 10px;
+            font-weight: 700;
           }
 
           .signature-zone {
@@ -2388,31 +2486,30 @@ const generateFactureHTML = (booking) => {
           }
           .signature-label {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8px;
-            letter-spacing: 1.6px;
+            font-size: 9px;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: #574a2d;
+            color: #4a3a18;
             margin-top: 5px;
-            font-weight: 600;
+            font-weight: 700;
           }
 
           .footer-sign {
             margin-top: 16px;
             font-family: 'Great Vibes', cursive;
-            font-size: 16px;
+            font-size: 18px;
             color: #2b2013;
           }
           .footer-contact {
             font-family: 'Montserrat', sans-serif;
-            font-size: 8.5px;
-            letter-spacing: 0.9px;
-            color: #574a2d;
+            font-size: 9.5px;
+            letter-spacing: 0.8px;
+            color: #4a3a18;
             margin-top: 3px;
-            font-weight: 500;
+            font-weight: 600;
           }
 
-          /* QR sur carte blanche nette : lisible et scannable partout,
-             sans mélange avec le motif du fond. */
+          /* QR sur carte blanche nette */
           .qr-block {
             margin-top: 12px;
             display: flex;
@@ -2426,12 +2523,12 @@ const generateFactureHTML = (booking) => {
           }
           .qr-block p {
             font-family: 'Montserrat', sans-serif;
-            font-size: 7.3px;
+            font-size: 8px;
             letter-spacing: 1px;
             text-transform: uppercase;
-            color: #574a2d;
+            color: #4a3a18;
             margin: 5px 0 0;
-            font-weight: 600;
+            font-weight: 700;
           }
 
           @media print {
@@ -2671,6 +2768,173 @@ const generateFactureHTML = (booking) => {
 
   const stats = calculateStats();
 
+  // ── EXPORT COMPTABLE CSV/Excel ────────────────────────────────────────────────
+  const exportComptable = async () => {
+    const XLSX = await import("xlsx");
+
+    const moisFR = ["Janvier","Février","Mars","Avril","Mai","Juin",
+                    "Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+    // Retourne { y, m } ou null — normalise les vignettes sans date vers le 1er janvier
+    const getYM = (dateStr) => {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : { y: d.getFullYear(), m: d.getMonth() };
+    };
+    // Clé de regroupement année-mois (ex: "2025-4")
+    const ymKey = (ym) => `${ym.y}-${ym.m}`;
+
+    // ── Feuille 1 : Revenus ──────────────────────────────────────────────────
+    // Avance en haut (triés par date ASC), Payé en bas (triés par date ASC)
+    const revenusRows = bookings
+      .filter((b) => b.paiement === "Payé" || b.paiement === "Avance")
+      .sort((a, b) => {
+        const aIsPaid = a.paiement === "Payé" ? 1 : 0;
+        const bIsPaid = b.paiement === "Payé" ? 1 : 0;
+        if (aIsPaid !== bIsPaid) return aIsPaid - bIsPaid; // Avance avant Payé
+        return new Date(a.date) - new Date(b.date);        // puis date ASC
+      })
+      .map((b) => {
+        const encaisse = b.paiement === "Payé" ? b.prix : (b.avance || 0);
+        const ym = getYM(b.date);
+        return {
+          "Date événement": b.date,
+          "Mois": ym ? moisFR[ym.m] : "",
+          "Année": ym ? ym.y : "",
+          "Client": b.client,
+          "Téléphone": b.phone || "",
+          "Trajet": b.trajet || "",
+          "Statut paiement": b.paiement,
+          "Prix total (DT)": b.prix,
+          "Avance (DT)": b.avance || 0,
+          "Reste (DT)": b.reste || 0,
+          "Encaissé (DT)": encaisse,
+        };
+      });
+
+    // ── Feuille 2 : Dépenses ─────────────────────────────────────────────────
+    // On stocke aussi la clé ymKey pour le récap (pas dans la feuille)
+    const depensesRows = [];
+    carburants.forEach((c) => {
+      const ym = getYM(c.date);
+      depensesRows.push({
+        _ym: ym,
+        "Date": c.date,
+        "Mois": ym ? moisFR[ym.m] : "",
+        "Année": ym ? ym.y : "",
+        "Catégorie": "Carburant",
+        "Description": `${c.quantite} L @ ${c.prixLitre} DT/L${c.station ? " — " + c.station : ""}`,
+        "Montant (DT)": c.coutTotal,
+      });
+    });
+    maintenances.forEach((m) => {
+      const ym = getYM(m.date);
+      depensesRows.push({
+        _ym: ym,
+        "Date": m.date,
+        "Mois": ym ? moisFR[ym.m] : "",
+        "Année": ym ? ym.y : "",
+        "Catégorie": "Maintenance",
+        "Description": `${m.type}${m.description ? " — " + m.description : ""}`,
+        "Montant (DT)": m.cout,
+      });
+    });
+    assurances.forEach((a) => {
+      const ym = getYM(a.dateDebut);
+      depensesRows.push({
+        _ym: ym,
+        "Date": a.dateDebut,
+        "Mois": ym ? moisFR[ym.m] : "",
+        "Année": ym ? ym.y : "",
+        "Catégorie": "Assurance",
+        "Description": `${a.compagnie}${a.numeroContrat ? " — N°" + a.numeroContrat : ""}`,
+        "Montant (DT)": a.cout,
+      });
+    });
+    vignettes.forEach((v) => {
+      // Si pas de date de paiement, on prend le 1er janvier de l'année
+      const dateStr = v.datePaiement || `${v.annee}-01-01`;
+      const ym = getYM(dateStr);
+      depensesRows.push({
+        _ym: ym,
+        "Date": v.datePaiement || `${v.annee}-01-01`,
+        "Mois": ym ? moisFR[ym.m] : "",
+        "Année": ym ? ym.y : v.annee,
+        "Catégorie": "Vignette",
+        "Description": `Vignette ${v.annee}`,
+        "Montant (DT)": v.cout,
+      });
+    });
+    depensesRows.sort((a, b) => new Date(a["Date"]) - new Date(b["Date"]));
+
+    // Pré-calcule les dépenses par clé ymKey pour le récap
+    const depByKey = {};
+    depensesRows.forEach((r) => {
+      if (!r._ym) return;
+      const k = ymKey(r._ym);
+      depByKey[k] = (depByKey[k] || 0) + r["Montant (DT)"];
+    });
+
+    // ── Feuille 3 : Récapitulatif mensuel ────────────────────────────────────
+    const allDates = [
+      ...bookings.map((b) => b.date),
+      ...depensesRows.map((r) => r["Date"]),
+    ].filter(Boolean);
+    const years = [...new Set(
+      allDates.map((d) => new Date(d).getFullYear()).filter((y) => !isNaN(y))
+    )].sort();
+
+    const recapRows = [];
+    years.forEach((year) => {
+      moisFR.forEach((moisLabel, mIdx) => {
+        const k = `${year}-${mIdx}`;
+        const revenuMois = bookings
+          .filter((b) => { const ym = getYM(b.date); return ym && ym.y === year && ym.m === mIdx && (b.paiement === "Payé" || b.paiement === "Avance"); })
+          .reduce((s, b) => s + (b.paiement === "Payé" ? b.prix : (b.avance || 0)), 0);
+        const depenseMois = depByKey[k] || 0;
+
+        if (revenuMois > 0 || depenseMois > 0) {
+          recapRows.push({
+            "Année": year,
+            "Mois": moisLabel,
+            "N° Mois": mIdx + 1,
+            "Revenus encaissés (DT)": revenuMois,
+            "Dépenses (DT)": depenseMois,
+            "Bénéfice net (DT)": revenuMois - depenseMois,
+          });
+        }
+      });
+      // Ligne total annuel — recalcule sur les lignes déjà poussées pour cette année
+      const yearRows = recapRows.filter((r) => r["Année"] === year && r["Mois"] !== "TOTAL ANNUEL");
+      const totalRev = yearRows.reduce((s, r) => s + r["Revenus encaissés (DT)"], 0);
+      const totalDep = yearRows.reduce((s, r) => s + r["Dépenses (DT)"], 0);
+      recapRows.push({
+        "Année": year,
+        "Mois": "TOTAL ANNUEL",
+        "N° Mois": 13,
+        "Revenus encaissés (DT)": totalRev,
+        "Dépenses (DT)": totalDep,
+        "Bénéfice net (DT)": totalRev - totalDep,
+      });
+    });
+
+    // ── Construction du classeur ─────────────────────────────────────────────
+    const wb = XLSX.utils.book_new();
+
+    // Retire le champ interne _ym avant d'écrire la feuille Dépenses
+    const depExport = depensesRows.map(({ _ym, ...rest }) => rest);
+
+    const wsRevenus = XLSX.utils.json_to_sheet(revenusRows.length ? revenusRows : [{ "Info": "Aucun revenu enregistré" }]);
+    const wsDep     = XLSX.utils.json_to_sheet(depExport.length  ? depExport  : [{ "Info": "Aucune dépense enregistrée" }]);
+    const wsRecap   = XLSX.utils.json_to_sheet(recapRows.length  ? recapRows  : [{ "Info": "Aucune donnée" }]);
+
+    XLSX.utils.book_append_sheet(wb, wsRevenus, "Revenus");
+    XLSX.utils.book_append_sheet(wb, wsDep,     "Dépenses");
+    XLSX.utils.book_append_sheet(wb, wsRecap,   "Récapitulatif");
+
+    const annee = new Date().getFullYear();
+    XLSX.writeFile(wb, `fakhama-comptabilite-${annee}.xlsx`);
+    showNotification("Export comptable téléchargé ✓", "success");
+  };
+
   // Filtre + recherche (nom client ou téléphone)
   // Les réservations "Payé" sont archivées : elles quittent la liste active des
   // réservations et n'apparaissent plus que dans l'onglet Archive du menu.
@@ -2717,12 +2981,20 @@ const generateFactureHTML = (booking) => {
       return timeToMinutes(b.heure) - timeToMinutes(a.heure);
     });
 
-  // Pagination client-side du tableau des réservations
+  // Pagination réservations
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const paginatedBookings = filteredBookings.slice(
     (safeCurrentPage - 1) * itemsPerPage,
     safeCurrentPage * itemsPerPage
+  );
+
+  // Pagination archive
+  const archiveTotalPages = Math.max(1, Math.ceil(archivedBookings.length / itemsPerPage));
+  const safeArchivePage = Math.min(archivePage, archiveTotalPages);
+  const paginatedArchive = archivedBookings.slice(
+    (safeArchivePage - 1) * itemsPerPage,
+    safeArchivePage * itemsPerPage
   );
 
   if (!authenticated) {
@@ -2777,7 +3049,7 @@ const generateFactureHTML = (booking) => {
 
         <div className="max-w-7xl mx-auto py-6 px-8">
 
-          {activeTab === "simulation" && <PriceSimulation />}
+          {activeTab === "simulation" && <PriceSimulation bookings={bookings} />}
 
           {activeTab === "dashboard" && (
             <div className="space-y-6">
@@ -2888,22 +3160,22 @@ const generateFactureHTML = (booking) => {
                       type="text"
                       placeholder="Ex: Sami, 93993619..."
                       value={search}
-                      onChange={(e) => setSearch(e.target.value)}
+                      onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                       className={inputClass}
                     />
                   </div>
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par date</label>
-                    <input type="date" value={filter.date || ""} onChange={(e) => setFilter((prev) => ({ ...prev, date: e.target.value || undefined }))} className={inputClass} />
+                    <input type="date" value={filter.date || ""} onChange={(e) => { setFilter((prev) => ({ ...prev, date: e.target.value || undefined })); setCurrentPage(1); }} className={inputClass} />
                   </div>
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par statut</label>
-                    <select value={filter.status || ""} onChange={(e) => setFilter((prev) => ({ ...prev, status: e.target.value || undefined }))} className={inputClass}>
+                    <select value={filter.status || ""} onChange={(e) => { setFilter((prev) => ({ ...prev, status: e.target.value || undefined })); setCurrentPage(1); }} className={inputClass}>
                       <option value="">Tous les statuts</option>
                       {PAIEMENT_STATUSES.filter((s) => s !== "Payé").map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
-                  <button onClick={() => { setFilter({}); setSearch(""); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Réinitialiser</button>
+                  <button onClick={() => { setFilter({}); setSearch(""); setCurrentPage(1); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Réinitialiser</button>
                 </div>
               </div>
 
@@ -3234,7 +3506,7 @@ const generateFactureHTML = (booking) => {
                       type="text"
                       placeholder="Ex: Sami, 93993619..."
                       value={archiveSearch}
-                      onChange={(e) => setArchiveSearch(e.target.value)}
+                      onChange={(e) => { setArchiveSearch(e.target.value); setArchivePage(1); }}
                       className={inputClass}
                     />
                   </div>
@@ -3254,7 +3526,7 @@ const generateFactureHTML = (booking) => {
                   <div className="space-y-3">
                     {archivedBookings.length === 0 ? (
                       <p className="text-center text-gray-500 py-8">Aucune réservation archivée</p>
-                    ) : archivedBookings.map((b) => (
+                    ) : paginatedArchive.map((b) => (
                       <BookingCard
                         key={b.id}
                         booking={b}
@@ -3277,7 +3549,7 @@ const generateFactureHTML = (booking) => {
                     <tbody>
                       {archivedBookings.length === 0 ? (
                         <tr><td colSpan={11} className="border border-gray-300 px-4 py-8 text-center text-gray-500">Aucune réservation archivée</td></tr>
-                      ) : archivedBookings.map((b) => (
+                      ) : paginatedArchive.map((b) => (
                         <tr key={b.id} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-4 py-2 font-medium text-gray-900">{b.client}</td>
                           <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.phone || "-"}</td>
@@ -3312,7 +3584,154 @@ const generateFactureHTML = (booking) => {
                   </table>
                 </div>
                 )}
+
+                {/* Pagination archive */}
+                {archivedBookings.length > itemsPerPage && (
+                  <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+                    <span>Page {safeArchivePage} / {archiveTotalPages} — {archivedBookings.length} résultat(s)</span>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={safeArchivePage === 1}
+                        onClick={() => setArchivePage((p) => Math.max(1, p - 1))}
+                        className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        ← Précédent
+                      </button>
+                      <button
+                        disabled={safeArchivePage === archiveTotalPages}
+                        onClick={() => setArchivePage((p) => Math.min(archiveTotalPages, p + 1))}
+                        className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Suivant →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+          )}
+
+          {/* COMPTABILITÉ TAB */}
+          {activeTab === "comptabilite" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">🧾 Export Comptable</h2>
+                  <p className="text-sm text-gray-500 mt-1">Revenus et dépenses par mois / par an — pour la déclaration fiscale</p>
+                </div>
+                <button
+                  onClick={exportComptable}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm transition-colors"
+                >
+                  ⬇️ Télécharger Excel (.xlsx)
+                </button>
+              </div>
+
+              {/* Aperçu récapitulatif */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Aperçu — Revenus et dépenses par mois</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-gray-800 text-white">
+                        <th className="px-4 py-3 text-left font-semibold">Année</th>
+                        <th className="px-4 py-3 text-left font-semibold">Mois</th>
+                        <th className="px-4 py-3 text-right font-semibold">Revenus (DT)</th>
+                        <th className="px-4 py-3 text-right font-semibold">Dépenses (DT)</th>
+                        <th className="px-4 py-3 text-right font-semibold">Bénéfice net (DT)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const moisFR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+                        const getYM = (d) => { const x = new Date(d); return isNaN(x.getTime()) ? null : { y: x.getFullYear(), m: x.getMonth() }; };
+                        // Dépenses par clé année-mois (même logique que l'export)
+                        const depByKey = {};
+                        carburants.forEach((c) => { const ym = getYM(c.date); if (ym) { const k=`${ym.y}-${ym.m}`; depByKey[k]=(depByKey[k]||0)+c.coutTotal; } });
+                        maintenances.forEach((m) => { const ym = getYM(m.date); if (ym) { const k=`${ym.y}-${ym.m}`; depByKey[k]=(depByKey[k]||0)+m.cout; } });
+                        assurances.forEach((a) => { const ym = getYM(a.dateDebut); if (ym) { const k=`${ym.y}-${ym.m}`; depByKey[k]=(depByKey[k]||0)+a.cout; } });
+                        vignettes.forEach((v) => { const ym = getYM(v.datePaiement||`${v.annee}-01-01`); if (ym) { const k=`${ym.y}-${ym.m}`; depByKey[k]=(depByKey[k]||0)+v.cout; } });
+                        // Toutes les clés année-mois présentes
+                        const keys = new Set([
+                          ...bookings.filter((b)=>b.paiement==="Payé"||b.paiement==="Avance").map((b)=>{ const ym=getYM(b.date); return ym?`${ym.y}-${ym.m}`:null; }).filter(Boolean),
+                          ...Object.keys(depByKey),
+                        ]);
+                        const sorted = [...keys].sort();
+                        if (sorted.length === 0) return (
+                          <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">Aucune donnée disponible</td></tr>
+                        );
+                        // Grouper par année
+                        const yearGroups = {};
+                        sorted.forEach((k) => { const [y] = k.split("-"); if (!yearGroups[y]) yearGroups[y]=[]; yearGroups[y].push(k); });
+                        const rows = [];
+                        Object.keys(yearGroups).sort().forEach((year, yi) => {
+                          let yearRev = 0, yearDep = 0;
+                          yearGroups[year].forEach((k, i) => {
+                            const [y, mStr] = k.split("-");
+                            const mIdx = parseInt(mStr);
+                            const rev = bookings.filter((b) => { const ym=getYM(b.date); return ym&&ym.y===parseInt(y)&&ym.m===mIdx&&(b.paiement==="Payé"||b.paiement==="Avance"); }).reduce((s,b)=>s+(b.paiement==="Payé"?b.prix:(b.avance||0)),0);
+                            const dep = depByKey[k] || 0;
+                            yearRev += rev; yearDep += dep;
+                            const net = rev - dep;
+                            const isEven = i % 2 === 0;
+                            rows.push(
+                              <tr key={k} className={isEven ? "bg-white" : "bg-gray-50"}>
+                                <td className="px-4 py-3 text-gray-500 text-sm">{year}</td>
+                                <td className="px-4 py-3 font-medium text-gray-900">{moisFR[mIdx]}</td>
+                                <td className="px-4 py-3 text-right font-semibold text-green-700">{rev > 0 ? rev.toLocaleString("fr-FR") + " DT" : <span className="text-gray-300">—</span>}</td>
+                                <td className="px-4 py-3 text-right font-semibold text-red-600">{dep > 0 ? dep.toLocaleString("fr-FR") + " DT" : <span className="text-gray-300">—</span>}</td>
+                                <td className={`px-4 py-3 text-right font-bold ${net >= 0 ? "text-emerald-600" : "text-red-700"}`}>{net.toLocaleString("fr-FR")} DT</td>
+                              </tr>
+                            );
+                          });
+                          rows.push(
+                            <tr key={`total-${year}`} className="bg-gray-800 text-white font-bold">
+                              <td className="px-4 py-3 text-white">{year}</td>
+                              <td className="px-4 py-3 text-white uppercase tracking-wide text-xs">Total annuel</td>
+                              <td className="px-4 py-3 text-right text-green-300">{yearRev.toLocaleString("fr-FR")} DT</td>
+                              <td className="px-4 py-3 text-right text-red-300">{yearDep.toLocaleString("fr-FR")} DT</td>
+                              <td className={`px-4 py-3 text-right font-bold ${(yearRev-yearDep)>=0?"text-emerald-300":"text-red-300"}`}>{(yearRev-yearDep).toLocaleString("fr-FR")} DT</td>
+                            </tr>
+                          );
+                          // Séparateur entre années
+                          if (yi < Object.keys(yearGroups).length - 1)
+                            rows.push(<tr key={`sep-${year}`}><td colSpan={5} className="py-1 bg-gray-100" /></tr>);
+                        });
+                        return rows;
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Détail dépenses */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Détail des dépenses incluses dans l'export</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-orange-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(carburants.reduce((s, c) => s + c.coutTotal, 0))}</p>
+                    <p className="text-xs text-orange-700 mt-1">⛽ Carburant ({carburants.length} pleins)</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(maintenances.reduce((s, m) => s + m.cout, 0))}</p>
+                    <p className="text-xs text-blue-700 mt-1">🔧 Maintenance ({maintenances.length} interventions)</p>
+                  </div>
+                  <div className="bg-indigo-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-indigo-600">{formatCurrency(assurances.reduce((s, a) => s + a.cout, 0))}</p>
+                    <p className="text-xs text-indigo-700 mt-1">🛡️ Assurances ({assurances.length} contrats)</p>
+                  </div>
+                  <div className="bg-yellow-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-yellow-600">{formatCurrency(vignettes.reduce((s, v) => s + v.cout, 0))}</p>
+                    <p className="text-xs text-yellow-700 mt-1">📋 Vignettes ({vignettes.length} années)</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center">
+                Le fichier Excel contient 3 feuilles : <strong>Revenus</strong> (une ligne par réservation encaissée),
+                <strong> Dépenses</strong> (carburant, maintenance, assurance, vignette), et
+                <strong> Récapitulatif</strong> (tableau mensuel avec bénéfice net — prêt pour la déclaration fiscale).
+              </p>
             </div>
           )}
 
