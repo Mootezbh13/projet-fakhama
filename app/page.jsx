@@ -252,7 +252,7 @@ const Notification = ({ message, type = "info", onClose }) => {
     warning: "bg-amber-50 border-amber-200 text-amber-800",
   };
   return (
-    <div className={`fixed top-4 right-4 z-50 min-w-80 ${variants[type]} border rounded-lg p-4 shadow-lg`}>
+    <div className={`fixed top-4 right-4 left-4 md:left-auto z-50 md:min-w-80 ${variants[type]} border rounded-lg p-4 shadow-lg`}>
       <div className="flex justify-between items-start">
         <p className="text-sm font-medium">{message}</p>
         <button onClick={onClose} className="ml-4 text-gray-400 hover:text-gray-600">✕</button>
@@ -315,46 +315,58 @@ const SIDEBAR_ITEMS = [
   { id: "archive", label: "Archive", icon: "📦" },
 ];
 
-const Sidebar = ({ activeTab, setActiveTab, onLogout }) => (
-  <aside className="w-64 shrink-0 h-screen sticky top-0 bg-white border-r border-gray-100 flex flex-col">
-    <div className="flex items-center gap-2 px-5 py-5">
-      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-600 to-amber-500 flex items-center justify-center">
-        <span className="text-white text-xs font-bold">FWE</span>
+const Sidebar = ({ activeTab, setActiveTab, onLogout, open, onClose }) => (
+  <>
+    {/* Overlay mobile */}
+    {open && (
+      <div
+        className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        onClick={onClose}
+      />
+    )}
+    <aside className={`fixed md:sticky top-0 z-40 md:z-auto h-screen w-64 shrink-0 bg-white border-r border-gray-100 flex flex-col transition-transform duration-200
+      ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      <div className="flex items-center gap-2 px-5 py-5">
+        <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-600 to-amber-500 flex items-center justify-center">
+          <span className="text-white text-xs font-bold">FWE</span>
+        </div>
+        <div>
+          <p className="font-bold text-gray-900 leading-tight">Fakhama</p>
+          <p className="text-[11px] text-gray-400 leading-tight">Weddings &amp; Events</p>
+        </div>
+        {/* Bouton fermer visible uniquement sur mobile */}
+        <button onClick={onClose} className="ml-auto text-gray-400 md:hidden text-xl leading-none">✕</button>
       </div>
-      <div>
-        <p className="font-bold text-gray-900 leading-tight">Fakhama</p>
-        <p className="text-[11px] text-gray-400 leading-tight">Weddings &amp; Events</p>
+
+      <p className="px-5 mt-4 mb-2 text-[11px] font-semibold tracking-wider text-gray-400">MENU PRINCIPAL</p>
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+        {SIDEBAR_ITEMS.map((item) => {
+          const active = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); onClose(); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                active ? "bg-rose-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span>{item.icon}</span>
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="p-3 border-t border-gray-100">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-gray-50"
+        >
+          🚪 Déconnexion
+        </button>
       </div>
-    </div>
-
-    <p className="px-5 mt-4 mb-2 text-[11px] font-semibold tracking-wider text-gray-400">MENU PRINCIPAL</p>
-    <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-      {SIDEBAR_ITEMS.map((item) => {
-        const active = activeTab === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              active ? "bg-rose-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            <span>{item.icon}</span>
-            {item.label}
-          </button>
-        );
-      })}
-    </nav>
-
-    <div className="p-3 border-t border-gray-100">
-      <button
-        onClick={onLogout}
-        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 hover:bg-gray-50"
-      >
-        🚪 Déconnexion
-      </button>
-    </div>
-  </aside>
+    </aside>
+  </>
 );
 
 // ── KPI CARD (nouveau) ──────────────────────────────────────────────────────────
@@ -1617,6 +1629,7 @@ export default function CarRentalManagement() {
   const [reservationsView, setReservationsView] = useState("table");
   const [archiveView, setArchiveView] = useState("table");
   const [activeTab, setActiveTab] = useState("simulation");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDayBookings, setSelectedDayBookings] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [draftBooking, setDraftBooking] = useState(null);
@@ -3093,7 +3106,13 @@ const generateFactureHTML = (booking) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={() => setAuthenticated(false)} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={() => setAuthenticated(false)}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <main className="flex-1 min-w-0">
         {dataError && (
@@ -3103,11 +3122,21 @@ const generateFactureHTML = (booking) => {
           </div>
         )}
 
-        {/* Topbar façon "Good Morning" */}
-        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-gray-100">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Bonjour, Taz 👋</h1>
-            <p className="text-sm text-gray-500">Bienvenue sur votre tableau de bord Fakhama</p>
+        {/* Topbar */}
+        <div className="flex items-center justify-between px-4 md:px-8 py-4 md:py-5 bg-white border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            {/* Bouton hamburger — visible uniquement sur mobile */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 text-xl leading-none"
+              aria-label="Ouvrir le menu"
+            >
+              ☰
+            </button>
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-gray-900">Bonjour, Taz 👋</h1>
+              <p className="text-xs md:text-sm text-gray-500 hidden sm:block">Bienvenue sur votre tableau de bord Fakhama</p>
+            </div>
           </div>
           <div className="flex items-center gap-4 text-gray-400 text-lg">
             <span title="Rechercher">🔍</span>
@@ -3115,7 +3144,7 @@ const generateFactureHTML = (booking) => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto py-6 px-8">
+        <div className="max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-8">
 
           {activeTab === "simulation" && <PriceSimulation bookings={bookings} />}
 
