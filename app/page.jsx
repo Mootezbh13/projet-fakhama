@@ -261,6 +261,23 @@ const Notification = ({ message, type = "info", onClose }) => {
   );
 };
 
+// ── MODALE DE CONFIRMATION ─────────────────────────────────────────────────────
+const ConfirmModal = ({ message, onConfirm, onCancel }) => (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6">
+      <div className="flex items-start gap-3 mb-5">
+        <span className="text-2xl">🗑️</span>
+        <p className="text-gray-800 font-medium leading-snug">{message}</p>
+      </div>
+      <p className="text-xs text-gray-400 mb-5">Cette action est <strong>irréversible</strong>.</p>
+      <div className="flex gap-3">
+        <button onClick={onCancel} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium">Annuler</button>
+        <button onClick={onConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Supprimer</button>
+      </div>
+    </div>
+  </div>
+);
+
 // ── ITINERARY MAP (nouveau) ─────────────────────────────────────────────────────
 // Carte Google Maps (embed sans clé API) affichant le trajet départ (Tunis) → arrêts.
 // NOTE: utilise le point d'entrée "google.com/maps?...&output=embed", qui ne
@@ -987,9 +1004,10 @@ const RevenueByCity = ({ bookings }) => {
 };
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
-const LoginForm = ({ onLogin, error }) => {
+const LoginForm = ({ onLogin, error, loading }) => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const handleSubmit = (e) => { e.preventDefault(); onLogin(password); };
+  const handleSubmit = (e) => { e.preventDefault(); onLogin(email, password); };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 to-amber-50">
       <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
@@ -1001,13 +1019,22 @@ const LoginForm = ({ onLogin, error }) => {
           <p className="text-sm text-gray-500 text-center">BMW Série 3 2026</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
-          <input id="password" type="password" placeholder="Entrez le mot de passe" value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 text-gray-900 placeholder-gray-400" required />
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="email" type="email" placeholder="votre@email.com" value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 text-gray-900 placeholder-gray-400" required />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+            <input id="password" type="password" placeholder="••••••••" value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500 text-gray-900 placeholder-gray-400" required />
+          </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button type="submit" className="w-full bg-gradient-to-r from-rose-600 to-amber-600 text-white py-2 px-4 rounded-md hover:from-rose-700 hover:to-amber-700 transition-all">
-            Se connecter
+          <button type="submit" disabled={loading}
+            className="w-full bg-gradient-to-r from-rose-600 to-amber-600 text-white py-2 px-4 rounded-md hover:from-rose-700 hover:to-amber-700 transition-all disabled:opacity-60">
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
       </div>
@@ -1613,8 +1640,8 @@ const RealTimeStats = ({ bookings }) => {
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function CarRentalManagement() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [correctPassword] = useState("kchiefos1332");
   const [bookings, setBookings] = useState([]);
   const [maintenances, setMaintenances] = useState([]);
   const [assurances, setAssurances] = useState([]);
@@ -1623,8 +1650,13 @@ export default function CarRentalManagement() {
   const [editBooking, setEditBooking] = useState(null);
   const [notification, setNotification] = useState(null);
   const [filter, setFilter] = useState({});
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
   const [search, setSearch] = useState("");
   const [archiveSearch, setArchiveSearch] = useState("");
+  const [archiveDateFrom, setArchiveDateFrom] = useState("");
+  const [archiveDateTo, setArchiveDateTo] = useState("");
+  const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
   // Affichage tableau (desktop) ou liste de cartes (mobile) — choix manuel de l'utilisateur.
   const [reservationsView, setReservationsView] = useState("table");
   const [archiveView, setArchiveView] = useState("table");
@@ -1698,9 +1730,15 @@ export default function CarRentalManagement() {
     }
   }, []);
 
-  // Restaure la session côté client uniquement (localStorage indisponible côté serveur Next.js)
+  // Restaure la session Supabase Auth côté client au montage
   useEffect(() => {
-    if (localStorage.getItem("fakhama-auth") === "1") setAuthenticated(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setAuthenticated(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -2724,16 +2762,42 @@ const generateFactureHTML = (booking) => {
     showNotification("Réservation modifiée avec succès", "success");
   };
 
-  const handleDeleteBooking = async (id) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette réservation ?")) return;
-    const { error } = await supabase.from("bookings").delete().eq("id", id);
-    if (error) {
-      console.error(error);
-      showNotification("Erreur Supabase : suppression impossible", "error");
-      return;
-    }
-    setBookings((prev) => prev.filter((b) => b.id !== id));
-    showNotification("Réservation supprimée", "info");
+  const handleDeleteBooking = (id) => {
+    const b = bookings.find((x) => x.id === id);
+    setConfirmModal({
+      message: `Supprimer la réservation de ${b?.client || "ce client"} le ${b?.date || ""} ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        const { error } = await supabase.from("bookings").delete().eq("id", id);
+        if (error) { showNotification("Erreur Supabase : suppression impossible", "error"); return; }
+        setBookings((prev) => prev.filter((x) => x.id !== id));
+        showNotification("Réservation supprimée", "info");
+      },
+    });
+  };
+
+  const handleQuickStatusChange = async (booking, newStatus) => {
+    const avance = newStatus === "Payé" ? booking.prix : booking.avance;
+    const reste = calculateRest(booking.prix, avance, newStatus);
+    const updated = { ...booking, paiement: newStatus, avance, reste };
+    const { error } = await supabase.from("bookings").update(bookingToRow(updated)).eq("id", booking.id);
+    if (error) { showNotification("Erreur lors du changement de statut", "error"); return; }
+    setBookings((prev) => prev.map((b) => b.id === booking.id ? updated : b));
+    showNotification(`Statut mis à jour : ${newStatus}`, "success");
+  };
+
+  const handleDuplicateBooking = (b) => {
+    setNewBooking({
+      client: b.client, phone: b.phone, date: "", heure: b.heure,
+      retour: b.retour, paiement: "En attente", avance: "",
+      lieuMarie: b.lieuMarie, lieuMariee: b.lieuMariee, salleFetes: b.salleFetes,
+      lieuRetour: b.lieuRetour, lieuShooting: b.lieuShooting,
+      decoration: b.decoration, commentaires: b.commentaires,
+      shooting: b.shooting, shootingHeures: b.shootingHeures,
+    });
+    setNewBookingStops([...(b.trajetStops || ["Tunis"])]);
+    setActiveTab("reservations");
+    showNotification(`Réservation de ${b.client} dupliquée — modifiez la date puis enregistrez`, "info");
   };
 
   const handleAddMaintenance = async () => {
@@ -2748,11 +2812,17 @@ const generateFactureHTML = (booking) => {
     setNewMaintenance({ date: new Date().toISOString().split("T")[0], kilometrage: "", type: "", description: "", cout: "" });
     showNotification("Maintenance ajoutée", "success");
   };
-  const handleDeleteMaintenance = async (id) => {
-    if (!window.confirm("Supprimer cette maintenance ?")) return;
-    const { error } = await supabase.from("maintenances").delete().eq("id", id);
-    if (error) { console.error(error); showNotification("Erreur Supabase : suppression impossible", "error"); return; }
-    setMaintenances((prev) => prev.filter((m) => m.id !== id));
+  const handleDeleteMaintenance = (id) => {
+    const m = maintenances.find((x) => x.id === id);
+    setConfirmModal({
+      message: `Supprimer la maintenance "${m?.type || ""}" du ${m?.date || ""} ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        const { error } = await supabase.from("maintenances").delete().eq("id", id);
+        if (error) { showNotification("Erreur suppression maintenance", "error"); return; }
+        setMaintenances((prev) => prev.filter((x) => x.id !== id));
+      },
+    });
   };
 
   const handleAddAssurance = async () => {
@@ -2767,11 +2837,17 @@ const generateFactureHTML = (booking) => {
     setNewAssurance({ dateDebut: "", dateFin: "", compagnie: "", cout: "", numeroContrat: "" });
     showNotification("Assurance ajoutée", "success");
   };
-  const handleDeleteAssurance = async (id) => {
-    if (!window.confirm("Supprimer cette assurance ?")) return;
-    const { error } = await supabase.from("assurances").delete().eq("id", id);
-    if (error) { console.error(error); showNotification("Erreur Supabase : suppression impossible", "error"); return; }
-    setAssurances((prev) => prev.filter((a) => a.id !== id));
+  const handleDeleteAssurance = (id) => {
+    const a = assurances.find((x) => x.id === id);
+    setConfirmModal({
+      message: `Supprimer l'assurance ${a?.compagnie || ""} ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        const { error } = await supabase.from("assurances").delete().eq("id", id);
+        if (error) { showNotification("Erreur suppression assurance", "error"); return; }
+        setAssurances((prev) => prev.filter((x) => x.id !== id));
+      },
+    });
   };
 
   const handleAddVignette = async () => {
@@ -2786,11 +2862,17 @@ const generateFactureHTML = (booking) => {
     setNewVignette({ annee: new Date().getFullYear(), cout: "", datePaiement: new Date().toISOString().split("T")[0] });
     showNotification("Vignette ajoutée", "success");
   };
-  const handleDeleteVignette = async (id) => {
-    if (!window.confirm("Supprimer cette vignette ?")) return;
-    const { error } = await supabase.from("vignettes").delete().eq("id", id);
-    if (error) { console.error(error); showNotification("Erreur Supabase : suppression impossible", "error"); return; }
-    setVignettes((prev) => prev.filter((v) => v.id !== id));
+  const handleDeleteVignette = (id) => {
+    const v = vignettes.find((x) => x.id === id);
+    setConfirmModal({
+      message: `Supprimer la vignette ${v?.annee || ""} ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        const { error } = await supabase.from("vignettes").delete().eq("id", id);
+        if (error) { showNotification("Erreur suppression vignette", "error"); return; }
+        setVignettes((prev) => prev.filter((x) => x.id !== id));
+      },
+    });
   };
 
   const handleAddCarburant = async () => {
@@ -2811,11 +2893,17 @@ const generateFactureHTML = (booking) => {
     setNewCarburant({ date: new Date().toISOString().split("T")[0], quantite: "", prixLitre: "", kilometrage: "", station: "" });
     showNotification("Plein ajouté", "success");
   };
-  const handleDeleteCarburant = async (id) => {
-    if (!window.confirm("Supprimer cet enregistrement ?")) return;
-    const { error } = await supabase.from("carburants").delete().eq("id", id);
-    if (error) { console.error(error); showNotification("Erreur Supabase : suppression impossible", "error"); return; }
-    setCarburants((prev) => prev.filter((c) => c.id !== id));
+  const handleDeleteCarburant = (id) => {
+    const c = carburants.find((x) => x.id === id);
+    setConfirmModal({
+      message: `Supprimer le plein du ${c?.date || ""} (${c?.quantite || ""}L) ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        const { error } = await supabase.from("carburants").delete().eq("id", id);
+        if (error) { showNotification("Erreur suppression carburant", "error"); return; }
+        setCarburants((prev) => prev.filter((x) => x.id !== id));
+      },
+    });
   };
 
   const calculateStats = () => {
@@ -2840,6 +2928,30 @@ const generateFactureHTML = (booking) => {
       ? bookings.reduce((sum, b) => sum + (b.prix - (Number(b.distance) || 0) * costPerKm), 0) / bookings.length
       : 0;
 
+    const aEncaisser = bookings
+      .filter((b) => b.paiement === "Avance")
+      .reduce((sum, b) => sum + (b.reste || 0), 0);
+
+    // Taux d'occupation : jours réservés ce mois vs jours dans le mois
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const reservedDaysThisMonth = new Set(
+      bookings
+        .filter((b) => {
+          const d = new Date(b.date);
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && b.paiement !== "Non payé";
+        })
+        .map((b) => b.date)
+    ).size;
+    const tauxOccupation = Math.round((reservedDaysThisMonth / daysInMonth) * 100);
+
+    // Kilométrage actuel = dernier km enregistré (carburant ou maintenance)
+    const allKm = [
+      ...carburants.map((c) => ({ km: c.kilometrage, date: c.date })),
+      ...maintenances.map((m) => ({ km: m.kilometrage, date: m.date })),
+    ].filter((x) => x.km).sort((a, b) => new Date(b.date) - new Date(a.date));
+    const dernierKilometrage = allKm.length > 0 ? allKm[0].km : null;
+
     return {
       totalRevenue, totalDepenses, totalMaintenanceCost, totalAssuranceCost,
       totalVignetteCost, totalCarburantCost, netProfit: totalRevenue - totalDepenses,
@@ -2848,7 +2960,7 @@ const generateFactureHTML = (booking) => {
       pendingBookings: bookings.filter((b) => b.paiement === "Avance").length,
       unpaidBookings: bookings.filter((b) => b.paiement === "Non payé").length,
       quoteBookings: bookings.filter((b) => b.paiement === "En attente").length,
-      costPerKm, avgMargin,
+      costPerKm, avgMargin, aEncaisser, tauxOccupation, reservedDaysThisMonth, daysInMonth, dernierKilometrage,
     };
   };
 
@@ -3029,6 +3141,8 @@ const generateFactureHTML = (booking) => {
     .filter((b) => {
       if (filter.date && b.date !== filter.date) return false;
       if (filter.status && b.paiement !== filter.status) return false;
+      if (filterDateFrom && b.date < filterDateFrom) return false;
+      if (filterDateTo && b.date > filterDateTo) return false;
       if (search.trim()) {
         const s = search.trim().toLowerCase();
         const matchClient = (b.client || "").toLowerCase().includes(s);
@@ -3056,6 +3170,8 @@ const generateFactureHTML = (booking) => {
         const matchPhone = (b.phone || "").toLowerCase().includes(s);
         if (!matchClient && !matchPhone) return false;
       }
+      if (archiveDateFrom && b.date < archiveDateFrom) return false;
+      if (archiveDateTo && b.date > archiveDateTo) return false;
       return true;
     })
     .sort((a, b) => {
@@ -3086,11 +3202,16 @@ const generateFactureHTML = (booking) => {
   if (!authenticated) {
     return (
       <LoginForm
-        onLogin={(pwd) => {
-          if (pwd === correctPassword) { localStorage.setItem("fakhama-auth", "1"); setAuthenticated(true); setLoginError(""); }
-          else setLoginError("Mot de passe incorrect !");
+        onLogin={async (email, password) => {
+          setLoginLoading(true);
+          setLoginError("");
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          setLoginLoading(false);
+          if (error) setLoginError("Email ou mot de passe incorrect.");
+          // onAuthStateChange gère setAuthenticated(true) automatiquement
         }}
         error={loginError}
+        loading={loginLoading}
       />
     );
   }
@@ -3111,10 +3232,17 @@ const generateFactureHTML = (booking) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {confirmModal && (
+        <ConfirmModal
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onLogout={() => { localStorage.removeItem("fakhama-auth"); setAuthenticated(false); }}
+        onLogout={async () => { await supabase.auth.signOut(); }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -3189,18 +3317,25 @@ const generateFactureHTML = (booking) => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <KpiCard
+                  label="💵 À encaisser"
+                  value={formatCurrency(stats.aEncaisser)}
+                  deltaLabel={`${stats.pendingBookings} client(s) avec avance en cours`}
+                  color="amber"
+                />
+                <KpiCard
+                  label="🚗 Taux occupation"
+                  value={`${stats.tauxOccupation}%`}
+                  deltaLabel={`${stats.reservedDaysThisMonth} j. réservés / ${stats.daysInMonth} ce mois`}
+                  progress={stats.tauxOccupation}
+                  color={stats.tauxOccupation >= 70 ? "green" : stats.tauxOccupation >= 40 ? "amber" : "rose"}
+                />
                 <KpiCard
                   label="Devis en attente"
                   value={stats.quoteBookings}
                   deltaLabel="Réservations à confirmer par le client"
                   color="amber"
-                />
-                <KpiCard
-                  label="Coût variable / km"
-                  value={`${stats.costPerKm.toFixed(2)} DT/km`}
-                  deltaLabel="Carburant + Maintenance, alloués aux km parcourus"
-                  color="rose"
                 />
                 <KpiCard
                   label="Marge brute moy. / résa"
@@ -3255,29 +3390,31 @@ const generateFactureHTML = (booking) => {
               <AllReminders bookings={bookings} assurances={assurances} />
 
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher (nom ou téléphone)</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Sami, 93993619..."
-                      value={search}
-                      onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                      className={inputClass}
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                    <input type="text" placeholder="Nom ou téléphone..." value={search}
+                      onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className={inputClass} />
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par date</label>
-                    <input type="date" value={filter.date || ""} onChange={(e) => { setFilter((prev) => ({ ...prev, date: e.target.value || undefined })); setCurrentPage(1); }} className={inputClass} />
-                  </div>
-                  <div className="flex-1">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par statut</label>
                     <select value={filter.status || ""} onChange={(e) => { setFilter((prev) => ({ ...prev, status: e.target.value || undefined })); setCurrentPage(1); }} className={inputClass}>
                       <option value="">Tous les statuts</option>
                       {PAIEMENT_STATUSES.filter((s) => s !== "Payé").map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
-                  <button onClick={() => { setFilter({}); setSearch(""); setCurrentPage(1); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Réinitialiser</button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Du</label>
+                    <input type="date" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Au</label>
+                    <input type="date" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }} className={inputClass} />
+                  </div>
+                  <div className="flex items-end">
+                    <button onClick={() => { setFilter({}); setSearch(""); setFilterDateFrom(""); setFilterDateTo(""); setCurrentPage(1); }}
+                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 text-sm">Réinitialiser</button>
+                  </div>
                 </div>
               </div>
 
@@ -3518,7 +3655,14 @@ const generateFactureHTML = (booking) => {
                         const isNewDateGroup = b.date !== prevDate;
                         return (
                           <tr key={b.id} className={`hover:bg-gray-50 ${isNewDateGroup && idx > 0 ? "border-t-2 border-rose-200" : ""}`}>
-                            <td className="border border-gray-300 px-4 py-2 font-medium text-gray-900">{b.client}</td>
+                            <td className="border border-gray-300 px-4 py-2 font-medium text-gray-900">
+                              <div className="flex items-center gap-1">
+                                {b.client}
+                                {b.commentaires && (
+                                  <span title={b.commentaires} className="cursor-help text-amber-500 text-xs">💬</span>
+                                )}
+                              </div>
+                            </td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.phone || "-"}</td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700 whitespace-nowrap">
                               <span className={isNewDateGroup ? "font-semibold text-rose-700" : "text-gray-700"}>
@@ -3546,7 +3690,18 @@ const generateFactureHTML = (booking) => {
                               {b.reste}{b.paiement === "Payé" && " ✓"}
                             </td>
                             <td className="border border-gray-300 px-4 py-2">
-                              <Badge variant={paiementVariant(b.paiement)}>{b.paiement}</Badge>
+                              <select
+                                value={b.paiement}
+                                onChange={(e) => handleQuickStatusChange(b, e.target.value)}
+                                className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 ${
+                                  b.paiement === "Payé" ? "bg-green-100 text-green-800" :
+                                  b.paiement === "Avance" ? "bg-gray-100 text-gray-800" :
+                                  b.paiement === "En attente" ? "bg-amber-100 text-amber-800" :
+                                  "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {PAIEMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                              </select>
                             </td>
                             <td className="border border-gray-300 px-4 py-2">
                               <Badge variant={b.retour ? "default" : "outline"}>{b.retour ? "Oui" : "Non"}</Badge>
@@ -3563,6 +3718,7 @@ const generateFactureHTML = (booking) => {
                                   setEditBooking(b);
                                   setEditBookingStops(b.trajetStops || [b.trajet || "Tunis"]);
                                 }} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>
+                                <button onClick={() => handleDuplicateBooking(b)} className="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">📋 Copier</button>
                                 <button onClick={() => handleDeleteBooking(b.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>
                               </div>
                             </td>
@@ -3608,20 +3764,24 @@ const generateFactureHTML = (booking) => {
               </div>
 
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher (nom ou téléphone)</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Sami, 93993619..."
-                      value={archiveSearch}
-                      onChange={(e) => { setArchiveSearch(e.target.value); setArchivePage(1); }}
-                      className={inputClass}
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                    <input type="text" placeholder="Nom ou téléphone..." value={archiveSearch}
+                      onChange={(e) => { setArchiveSearch(e.target.value); setArchivePage(1); }} className={inputClass} />
                   </div>
-                  {archiveSearch && (
-                    <button onClick={() => setArchiveSearch("")} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Réinitialiser</button>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Du</label>
+                    <input type="date" value={archiveDateFrom} onChange={(e) => { setArchiveDateFrom(e.target.value); setArchivePage(1); }} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Au</label>
+                    <input type="date" value={archiveDateTo} onChange={(e) => { setArchiveDateTo(e.target.value); setArchivePage(1); }} className={inputClass} />
+                  </div>
+                  <div className="flex items-end">
+                    <button onClick={() => { setArchiveSearch(""); setArchiveDateFrom(""); setArchiveDateTo(""); setArchivePage(1); }}
+                      className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 text-sm">Réinitialiser</button>
+                  </div>
                 </div>
               </div>
 
@@ -3871,6 +4031,31 @@ const generateFactureHTML = (booking) => {
                   </table>
                 </div>
               </div>
+              {stats.dernierKilometrage && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
+                    <p className="text-xs font-semibold text-blue-500 uppercase tracking-wide mb-1">🚗 Kilométrage actuel</p>
+                    <p className="text-2xl font-bold text-blue-700">{stats.dernierKilometrage.toLocaleString()} km</p>
+                    <p className="text-xs text-blue-400 mt-1">Dernier enregistrement (carburant ou maintenance)</p>
+                  </div>
+                  {maintenancePlan.map((plan) => {
+                    const restant = plan.kilometrage - (stats.dernierKilometrage % plan.kilometrage);
+                    const pct = Math.round(((plan.kilometrage - restant) / plan.kilometrage) * 100);
+                    return (
+                      <div key={plan.type} className={`rounded-2xl p-5 border ${restant < 1000 ? "bg-red-50 border-red-200" : restant < 3000 ? "bg-amber-50 border-amber-200" : "bg-gray-50 border-gray-100"}`}>
+                        <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${restant < 1000 ? "text-red-500" : restant < 3000 ? "text-amber-500" : "text-gray-400"}`}>{plan.type}</p>
+                        <p className={`text-xl font-bold ${restant < 1000 ? "text-red-700" : restant < 3000 ? "text-amber-700" : "text-gray-700"}`}>
+                          {restant < 0 ? "⚠️ Dépassé" : `Dans ${restant.toLocaleString()} km`}
+                        </p>
+                        <div className="w-full h-1.5 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                          <div className={`h-full rounded-full ${restant < 1000 ? "bg-red-500" : restant < 3000 ? "bg-amber-500" : "bg-blue-400"}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">➕ Ajouter une Maintenance</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
