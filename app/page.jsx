@@ -1698,6 +1698,11 @@ export default function CarRentalManagement() {
     }
   }, []);
 
+  // Restaure la session côté client uniquement (localStorage indisponible côté serveur Next.js)
+  useEffect(() => {
+    if (localStorage.getItem("fakhama-auth") === "1") setAuthenticated(true);
+  }, []);
+
   useEffect(() => {
     if (!authenticated) return;
     loadAllData();
@@ -2665,7 +2670,7 @@ const generateFactureHTML = (booking) => {
       alert(Object.values(errors).join("\n"));
       return;
     }
-    const shootingHeures = newBooking.shooting ? Number(newBooking.shootingHeures) || 0 : 0;
+    const shootingHeures = newBooking.shooting ? (Number(newBooking.shootingHeures) || 1) : 0;
     const { distance, prixBase, shootingCost, prix } = calculatePrice(newBookingStops, newBooking.retour, shootingHeures);
     const avance = Number(newBooking.avance) || 0;
     const reste = calculateRest(prix, avance, newBooking.paiement);
@@ -2703,7 +2708,7 @@ const generateFactureHTML = (booking) => {
       alert(Object.values(errors).join("\n"));
       return;
     }
-    const shootingHeures = editBooking.shooting ? Number(editBooking.shootingHeures) || 0 : 0;
+    const shootingHeures = editBooking.shooting ? (Number(editBooking.shootingHeures) || 1) : 0;
     const { distance, prixBase, shootingCost, prix } = calculatePrice(editBookingStops, editBooking.retour, shootingHeures);
     const avance = Number(editBooking.avance) || 0;
     const reste = calculateRest(prix, avance, editBooking.paiement);
@@ -3082,7 +3087,7 @@ const generateFactureHTML = (booking) => {
     return (
       <LoginForm
         onLogin={(pwd) => {
-          if (pwd === correctPassword) { setAuthenticated(true); setLoginError(""); }
+          if (pwd === correctPassword) { localStorage.setItem("fakhama-auth", "1"); setAuthenticated(true); setLoginError(""); }
           else setLoginError("Mot de passe incorrect !");
         }}
         error={loginError}
@@ -3109,7 +3114,7 @@ const generateFactureHTML = (booking) => {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onLogout={() => setAuthenticated(false)}
+        onLogout={() => { localStorage.removeItem("fakhama-auth"); setAuthenticated(false); }}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -3386,7 +3391,7 @@ const generateFactureHTML = (booking) => {
                   </div>
                   <div className="flex items-center space-x-2 mt-6">
                     <input type="checkbox" id="shooting" checked={newBooking.shooting}
-                      onChange={(e) => setNewBooking({ ...newBooking, shooting: e.target.checked })}
+                      onChange={(e) => setNewBooking({ ...newBooking, shooting: e.target.checked, shootingHeures: e.target.checked ? (newBooking.shootingHeures || 1) : newBooking.shootingHeures })}
                       className="rounded border-gray-300" />
                     <label htmlFor="shooting" className="text-sm font-medium text-gray-700 cursor-pointer">📸 Shooting photo/vidéo (50 DT/h)</label>
                   </div>
@@ -3527,7 +3532,14 @@ const generateFactureHTML = (booking) => {
                               </span>
                             </td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.distance || 0} km</td>
-                            <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.shootingHeures ? `${b.shootingHeures}h` : "-"}</td>
+                            <td className="border border-gray-300 px-4 py-2 text-gray-700">
+                              {b.shooting ? (
+                                <span className="text-xs">
+                                  📸 {b.shootingHeures ? `${b.shootingHeures}h` : ""}
+                                  {b.lieuShooting ? <><br/><span className="text-gray-500">{b.lieuShooting}</span></> : ""}
+                                </span>
+                              ) : "-"}
+                            </td>
                             <td className="border border-gray-300 px-4 py-2 font-semibold text-gray-900">{b.prix}</td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.avance || 0}</td>
                             <td className={`border border-gray-300 px-4 py-2 font-semibold ${b.reste > 0 && b.paiement === "Avance" ? "text-amber-600" : b.paiement === "Payé" ? "text-green-600" : "text-red-600"}`}>
@@ -4099,7 +4111,7 @@ const generateFactureHTML = (booking) => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <input type="checkbox" id="edit-shooting" checked={!!editBooking.shooting}
-                        onChange={(e) => setEditBooking({ ...editBooking, shooting: e.target.checked })} className="rounded border-gray-300" />
+                        onChange={(e) => setEditBooking({ ...editBooking, shooting: e.target.checked, shootingHeures: e.target.checked ? (editBooking.shootingHeures || 1) : editBooking.shootingHeures })} className="rounded border-gray-300" />
                       <label htmlFor="edit-shooting" className="text-sm font-medium text-gray-700 cursor-pointer">📸 Shooting photo/vidéo (50 DT/h)</label>
                     </div>
                     {editBooking.shooting && (
