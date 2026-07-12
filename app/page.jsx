@@ -2263,13 +2263,65 @@ const generateFactureHTML = (booking) => {
       </p>
 
       <div class="signature-zone">
-        <div>
+        <div class="sig-client">
           <div class="signature-line"></div>
           <p class="signature-label">Signature du client</p>
         </div>
-        <div>
-          <div class="signature-line"></div>
-          <p class="signature-label">Cachet de la société</p>
+        <div class="stamp-cell">
+          <!-- Tampon circulaire SVG — logo + texte courbes + infos -->
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 240 240" class="stamp-svg">
+            <defs>
+              <!-- Arc haut : r=98 → baseline texte haut dans l'anneau, passe par le haut -->
+              <path id="top-arc" d="M 22,120 A 98,98 0 0,1 218,120"/>
+              <!-- Arc bas : r=104, grand arc par le bas → baseline proche du grand cercle, texte dans l'anneau -->
+              <path id="bot-arc" d="M 16,120 A 104,104 0 1,0 224,120"/>
+              <clipPath id="logo-clip">
+                <circle cx="120" cy="78" r="52"/>
+              </clipPath>
+            </defs>
+
+            <!-- Cercle extérieur -->
+            <circle cx="120" cy="120" r="112" fill="none" stroke="#2b2013" stroke-width="3"/>
+            <!-- Cercle intérieur même couleur foncée -->
+            <circle cx="120" cy="120" r="95" fill="none" stroke="#2b2013" stroke-width="2"/>
+            <!-- Étoiles décoratives gauche/droite dans l'anneau -->
+            <text x="10" y="124" text-anchor="middle" font-size="9" fill="#c6a869" font-family="serif">✦</text>
+            <text x="230" y="124" text-anchor="middle" font-size="9" fill="#c6a869" font-family="serif">✦</text>
+
+            <!-- Texte courbe HAUT : entre les 2 cercles -->
+            <text font-family="Montserrat, sans-serif" font-size="10.5" font-weight="700"
+                  fill="#2b2013" letter-spacing="1.5">
+              <textPath href="#top-arc" startOffset="50%" text-anchor="middle">
+                FAKHAMA WEDDINGS &amp; EVENTS
+              </textPath>
+            </text>
+            <!-- Texte courbe BAS : entre les 2 cercles, dans l'anneau bas -->
+            <text font-family="Montserrat, sans-serif" font-size="10" font-weight="600"
+                  fill="#2b2013" letter-spacing="1.2">
+              <textPath href="#bot-arc" startOffset="50%" text-anchor="middle">
+                ✦  Le Bardo — Tunis, Tunisie  ✦
+              </textPath>
+            </text>
+
+            <!-- Logo agrandi — occupe la moitié haute du petit cercle -->
+            <image href="${FAKHAMA_LOGO_BROWN_BASE64}" x="64" y="26" width="112" height="104"
+                   clip-path="url(#logo-clip)" preserveAspectRatio="xMidYMid meet"/>
+
+            <!-- Séparateur doré sous le logo -->
+            <line x1="60" y1="136" x2="180" y2="136" stroke="#c6a869" stroke-width="1"/>
+
+            <!-- Infos centrales agrandies -->
+            <text x="120" y="153" text-anchor="middle"
+                  font-family="Montserrat, sans-serif" font-size="10" font-weight="600"
+                  fill="#4a3a18">Émise le ${dateFacture}</text>
+            <text x="120" y="169" text-anchor="middle"
+                  font-family="Montserrat, sans-serif" font-size="10" font-weight="600"
+                  fill="#4a3a18">+216 93 993 619</text>
+            <text x="120" y="184" text-anchor="middle"
+                  font-family="Montserrat, sans-serif" font-size="9" font-weight="500"
+                  fill="#6b5230">contact@fakhama.tn</text>
+          </svg>
+          <p class="signature-label" style="margin-top:6px;">Cachet de la société</p>
         </div>
       </div>
 
@@ -2478,6 +2530,12 @@ const generateFactureHTML = (booking) => {
             gap: 14px;
             margin-top: 7px;
             text-align: center;
+            align-items: end;
+          }
+          .sig-client {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
           .signature-line {
             width: 100%;
@@ -2529,6 +2587,16 @@ const generateFactureHTML = (booking) => {
             color: #4a3a18;
             margin: 5px 0 0;
             font-weight: 700;
+          }
+
+          .stamp-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .stamp-svg {
+            width: 140px;
+            height: 140px;
           }
 
           @media print {
