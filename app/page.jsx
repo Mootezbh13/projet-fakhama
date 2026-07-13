@@ -103,8 +103,8 @@ const rowToCarburant = (r) => ({
 // ── CONSTANTS ──────────────────────────────────────────────────────────────────
 const CITY_NAMES = ["Tunis", "Sousse", "Monastir", "Sfax", "Mahdia", "Bizerte", "Nabeul", "Beja", "Zaghouan"];
 const PRIX_BASE_EVENEMENT = 350;
-const PRIX_PAR_KM_NORMAL = 2.1;
-const PRIX_PAR_KM_REDUIT = 1.7;
+const PRIX_PAR_KM_NORMAL = 2;
+const PRIX_PAR_KM_REDUIT = 1.6;
 const SUPPLEMENT_RETOUR = 100;
 const PRIX_SHOOTING_HEURE = 50;
 const RESERVATION_TARGET_MENSUEL = 6; // objectif de réservations par mois, modifiable
@@ -203,7 +203,7 @@ const calculateItineraryPrice = (stops, retour) => {
     if (stops.length > 1) {
       prix += distance * 2;
     } else {
-      prix += distance > 200 ? distance * PRIX_PAR_KM_REDUIT : distance * PRIX_PAR_KM_NORMAL;
+      prix += distance > 150 ? distance * PRIX_PAR_KM_REDUIT : distance * PRIX_PAR_KM_NORMAL;
     }
   }
   if (retour) prix += SUPPLEMENT_RETOUR;
