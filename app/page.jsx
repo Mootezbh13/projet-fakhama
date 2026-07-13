@@ -104,7 +104,7 @@ const rowToCarburant = (r) => ({
 const CITY_NAMES = ["Tunis", "Sousse", "Monastir", "Sfax", "Mahdia", "Bizerte", "Nabeul", "Beja", "Zaghouan"];
 const PRIX_BASE_EVENEMENT = 350;
 const PRIX_PAR_KM_NORMAL = 2;
-const PRIX_PAR_KM_REDUIT = 1.6;
+const PRIX_PAR_KM_REDUIT = 1.65;
 const SUPPLEMENT_RETOUR = 100;
 const PRIX_SHOOTING_HEURE = 50;
 const RESERVATION_TARGET_MENSUEL = 6; // objectif de réservations par mois, modifiable
@@ -1229,8 +1229,8 @@ const PriceSimulation = ({ bookings = [] }) => {
                     {stops.length > 1
                       ? "1,000 DT/km (multi-arrêts)"
                       : distance > 200
-                      ? "1,700 DT/km (> 200 km)"
-                      : "2,100 DT/km (≤ 200 km)"}
+                      ? "1,650 DT/km (> 200 km)"
+                      : "2,0 DT/km (≤ 200 km)"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-rose-200">
