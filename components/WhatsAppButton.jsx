@@ -1,7 +1,7 @@
 import { DECORATION_OPTIONS } from "../lib/constants";
 import { formatCurrency } from "../lib/calculations";
 
-const WhatsAppButton = ({ booking, docNum }) => {
+const WhatsAppButton = ({ booking, docNum, onFacture }) => {
   if (booking.paiement !== "Avance" && booking.paiement !== "Payé") return null;
 
   const openWA = (message) => {
@@ -12,12 +12,21 @@ const WhatsAppButton = ({ booking, docNum }) => {
     window.open(url, "_blank");
   };
 
-  const handleDetails = () => {
+  const handleSend = () => {
     const decorationLabel =
       DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
     const itineraire = booking.trajetStops
       ? ["Tunis", ...booking.trajetStops].join(" → ")
       : booking.trajet || "Tunis";
+
+    // Lance le téléchargement du PDF (facture ou devis selon le statut du paiement).
+    // On n'attend pas la fin de la génération avant d'ouvrir WhatsApp : certains
+    // navigateurs bloquent les popups ouvertes après un délai asynchrone. Le PDF
+    // se télécharge en parallèle, prêt à être joint manuellement à la conversation.
+    if (onFacture) {
+      onFacture(booking);
+    }
+
     const message = [
       "🌸 *Fakhama Weddings & Events* 🌸",
       "_BMW Série 3 2026_",
@@ -37,29 +46,16 @@ const WhatsAppButton = ({ booking, docNum }) => {
       `• Salle : ${booking.salleFetes || "À confirmer"}`,
       `• Décoration : ${decorationLabel}`,
       "",
-      "📞 +216 93 993 619",
-    ].filter((l) => l !== null).join("\n");
-    openWA(message);
-  };
-
-  const handleFacture = () => {
-    const message = [
-      "🌸 *Fakhama Weddings & Events* 🌸",
-      "_BMW Série 3 2026_",
-      "",
-      `📄 *Facture N° ${docNum || "—"}*`,
-      "",
-      `👤 ${booking.client}`,
-      `📅 ${booking.date} à ${booking.heure}`,
-      "",
+      `📄 *${booking.paiement === "Payé" ? "Facture" : "Devis"} N° ${docNum || "—"}*`,
       `💰 *Prix total :* ${formatCurrency(booking.prix)}`,
       `✅ *Avance versée :* ${formatCurrency(booking.avance || 0)}`,
       booking.reste > 0 ? `⏳ *Reste à payer :* ${formatCurrency(booking.reste)}` : `✅ *Intégralement réglé*`,
       `🏷️ *Statut :* ${booking.paiement}`,
+      onFacture ? "📎 _Le PDF vient d'être téléchargé — pensez à le joindre à ce message._" : null,
       "",
       "📞 +216 93 993 619",
       "_Merci pour votre confiance ✨_",
-    ].join("\n");
+    ].filter((l) => l !== null).join("\n");
     openWA(message);
   };
 
@@ -70,27 +66,14 @@ const WhatsAppButton = ({ booking, docNum }) => {
   );
 
   return (
-    <div className="flex gap-1">
-      <button
-        onClick={handleDetails}
-        className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs flex items-center gap-1"
-        title="Envoyer confirmation de réservation par WhatsApp"
-      >
-        <WaIcon /> Détails
-      </button>
-      <button
-        onClick={handleFacture}
-        className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs flex items-center gap-1"
-        title="Envoyer récapitulatif facture par WhatsApp"
-      >
-        <WaIcon /> Facture
-      </button>
-    </div>
+    <button
+      onClick={handleSend}
+      className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs flex items-center gap-1"
+      title="Télécharger le PDF et envoyer les détails par WhatsApp"
+    >
+      <WaIcon /> WhatsApp
+    </button>
   );
 };
-
-// ── VIEW MODE TOGGLE (nouveau) ──────────────────────────────────────────────────
-// Bascule manuelle Tableau (desktop) / Liste (mobile), réutilisée pour les onglets
-// Réservations et Archive.
 
 export default WhatsAppButton;
