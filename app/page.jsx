@@ -44,9 +44,11 @@ export default function CarRentalManagement() {
   const [archiveDateTo, setArchiveDateTo] = useState("");
   const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
   // Affichage tableau (desktop) ou liste de cartes (mobile) — choix manuel de l'utilisateur.
-  const [reservationsView, setReservationsView] = useState("table");
+  const [reservationsView, setReservationsView] = useState(
+  typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table");
   const [showReservationsCalendar, setShowReservationsCalendar] = useState(false);
-  const [archiveView, setArchiveView] = useState("table");
+  const [archiveView, setArchiveView] = useState(
+  typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table");
   const [activeTab, setActiveTab] = useState("simulation");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDayBookings, setSelectedDayBookings] = useState(null);
@@ -340,9 +342,9 @@ export default function CarRentalManagement() {
     const isDevis = documentType === "devis";
     const docNum = getDocNumber(booking, isDevis ? "DEV" : "FAC");
     if (isDevis) {
-      generateDevisHTML(booking, docNum);
+      return generateDevisHTML(booking, docNum);
     } else {
-      generateFactureHTML(booking, docNum);
+      return generateFactureHTML(booking, docNum);
     }
   };
 
@@ -596,8 +598,9 @@ export default function CarRentalManagement() {
       </html>
     `;
 
-    downloadHTML(devisHTML, `devis-FWE-${booking.client}-${booking.date}.html`);
-    showNotification("Devis généré avec succès", "success");
+    return downloadPDF(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+      showNotification("Devis généré avec succès", "success");
+    });
   };
 
   // ── FACTURE — gabarit "carton d'invitation" doré (inchangé) + logo + QR ─────
@@ -1102,20 +1105,40 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       </html>
     `;
 
-    downloadHTML(factureHTML, `facture-FWE-${booking.client}-${booking.date}.html`);
-    showNotification("Facture prestige générée avec succès", "success");
+    return downloadPDF(factureHTML, `facture-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+      showNotification("Facture prestige générée avec succès", "success");
+    });
   };
-  // Télécharge une chaîne HTML sous forme de fichier .html (utilisé par le devis et la facture).
-  const downloadHTML = (html, filename) => {
-    const blob = new Blob([html], { type: "text/html; charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // Convertit une chaîne HTML en vrai fichier PDF téléchargé (utilisé par le devis et la facture).
+  // Retourne une Promise résolue une fois le PDF généré, pour pouvoir enchaîner une action après.
+  const downloadPDF = (html, filename) => {
+    return import("html2pdf.js").then(({ default: html2pdf }) => {
+      return new Promise((resolve) => {
+        const container = document.createElement("div");
+        container.style.position = "fixed";
+        container.style.left = "-99999px";
+        container.style.top = "0";
+        container.innerHTML = html;
+        document.body.appendChild(container);
+        html2pdf()
+          .set({
+            margin: 0,
+            filename,
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          })
+          .from(container)
+          .save()
+          .then(() => {
+            document.body.removeChild(container);
+            resolve();
+          })
+          .catch(() => {
+            document.body.removeChild(container);
+            resolve();
+          });
+      });
+    });
   };
 
   // Raccourci dédié pour générer un devis (utilisé sur les réservations "En attente").
@@ -2158,7 +2181,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                                 ) : (
                                   <button onClick={() => generateInvoiceEvenementPDF(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
                                 )}
-                                <WhatsAppButton booking={b} docNum={getDocNumber(b)} />
+                                <WhatsAppButton booking={b} docNum={getDocNumber(b)} onFacture={generateInvoiceEvenementPDF} />
                                 <button onClick={() => {
                                   setEditBooking(b);
                                   setEditBookingStops(b.trajetStops || [b.trajet || "Tunis"]);
@@ -2285,7 +2308,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                           <td className="border border-gray-300 px-4 py-2">
                             <div className="flex flex-wrap gap-1">
                               <button onClick={() => generateInvoiceEvenementPDF(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
-                              <WhatsAppButton booking={b} docNum={getDocNumber(b)} />
+                              <WhatsAppButton booking={b} docNum={getDocNumber(b)} onFacture={generateInvoiceEvenementPDF} />
                               <button onClick={() => {
                                 setEditBooking(b);
                                 setEditBookingStops(b.trajetStops || [b.trajet || "Tunis"]);
@@ -2422,7 +2445,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
               {/* Détail dépenses */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Détail des dépenses incluses dans l'export</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-orange-50 rounded-xl p-4 text-center">
                     <p className="text-2xl font-bold text-orange-600">{formatCurrency(carburants.reduce((s, c) => s + c.coutTotal, 0))}</p>
                     <p className="text-xs text-orange-700 mt-1">⛽ Carburant ({carburants.length} pleins)</p>
