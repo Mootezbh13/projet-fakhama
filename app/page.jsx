@@ -1675,7 +1675,6 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
 
   return (
     <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
-      <main className="flex-1 min-w-0"></main>
       {confirmModal && (
         <ConfirmModal
           message={confirmModal.message}
