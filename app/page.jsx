@@ -44,11 +44,12 @@ export default function CarRentalManagement() {
   const [archiveDateTo, setArchiveDateTo] = useState("");
   const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
   // Affichage tableau (desktop) ou liste de cartes (mobile) — choix manuel de l'utilisateur.
+  // Affichage tableau (desktop) ou liste de cartes (mobile) — auto sur mobile, modifiable ensuite.
   const [reservationsView, setReservationsView] = useState(
-  typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table");
+    typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table"
+  );
   const [showReservationsCalendar, setShowReservationsCalendar] = useState(false);
-  const [archiveView, setArchiveView] = useState(
-  typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table");
+  const [archiveView, setArchiveView] = useState(typeof window !== "undefined" && window.innerWidth < 768 ? "list" : "table");
   const [activeTab, setActiveTab] = useState("simulation");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDayBookings, setSelectedDayBookings] = useState(null);
@@ -1673,7 +1674,8 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+      <main className="flex-1 min-w-0"></main>
       {confirmModal && (
         <ConfirmModal
           message={confirmModal.message}
