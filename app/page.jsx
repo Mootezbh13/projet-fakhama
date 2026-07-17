@@ -71,7 +71,7 @@ export default function CarRentalManagement() {
     // le client confirmé.
     client: "", phone: "", date: "", heure: "20:00",
     retour: false, paiement: "En attente", avance: "",
-    lieuMarie: "", lieuMariee: "", salleFetes: "", lieuRetour: "", lieuShooting: "", decoration: "rubans", commentaires: "",
+    lieuMarie: "", lieuMariee: "", salleFetes: "", lieuRetour: "", lieuShooting: "", decoration: "rubans-fleurs", commentaires: "",
     shooting: false, shootingHeures: 1
   });
 
@@ -353,7 +353,7 @@ export default function CarRentalManagement() {
   const generateDevisHTML = (booking, docNum = `DEV-${new Date().getFullYear()}-???`) => {
     const dateFacture = new Date().toLocaleDateString("fr-FR");
     const decorationLabel =
-      DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
+      DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans et fleurs";
     const itineraire = booking.trajetStops
       ? ["Tunis", ...booking.trajetStops].join(" → ")
       : booking.trajet || "Tunis";
@@ -1177,7 +1177,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
     setBookings((prev) => [...prev, newBookingComplete]);
     localStorage.removeItem("fakhama-draft");
     setDraftBooking(null);
-    setNewBooking({ client: "", phone: "", date: "", heure: "20:00", retour: false, paiement: "En attente", avance: "", lieuMarie: "", lieuMariee: "", salleFetes: "", lieuRetour: "", lieuShooting: "", decoration: "rubans", commentaires: "", shooting: false, shootingHeures: 1 });
+    setNewBooking({ client: "", phone: "", date: "", heure: "20:00", retour: false, paiement: "En attente", avance: "", lieuMarie: "", lieuMariee: "", salleFetes: "", lieuRetour: "", lieuShooting: "", decoration: "rubans-fleurs", commentaires: "", shooting: false, shootingHeures: 1 });
     setNewBookingStops(["Tunis"]);
     showNotification("Réservation évenement ajoutée avec succès !", "success");
   };
@@ -2054,15 +2054,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         placeholder="Lieu de la séance photo/vidéo" className={inputClass} />
                     </div>
                   )}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type de Décoration</label>
-                    <select value={newBooking.decoration}
-                      onChange={(e) => setNewBooking({ ...newBooking, decoration: e.target.value })} className={inputClass}>
-                      {DECORATION_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Commentaires Spéciaux</label>
                     <textarea value={newBooking.commentaires}
@@ -2805,12 +2797,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         <input type="text" value={editBooking.lieuShooting || ""} onChange={(e) => setEditBooking({ ...editBooking, lieuShooting: e.target.value })} className={inputClass} />
                       </div>
                     )}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Décoration</label>
-                      <select value={editBooking.decoration || "rubans"} onChange={(e) => setEditBooking({ ...editBooking, decoration: e.target.value })} className={inputClass}>
-                        {DECORATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
+                    
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Commentaires</label>
                       <textarea value={editBooking.commentaires || ""} onChange={(e) => setEditBooking({ ...editBooking, commentaires: e.target.value })} className={`${inputClass} h-20`} />
