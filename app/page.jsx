@@ -1121,23 +1121,37 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
         container.style.top = "0";
         container.innerHTML = html;
         document.body.appendChild(container);
-        html2pdf()
-          .set({
-            margin: 0,
-            filename,
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          })
-          .from(container)
-          .save()
-          .then(() => {
-            document.body.removeChild(container);
-            resolve();
-          })
-          .catch(() => {
-            document.body.removeChild(container);
-            resolve();
-          });
+
+        // Laisse le temps aux images base64 (cadre, logo, QR) de se décoder
+        // avant de lancer la capture — évite les PDF quasi vides.
+        const images = Array.from(container.querySelectorAll("img"));
+        const waitForImages = Promise.all(
+          images.map((img) =>
+            img.complete
+              ? Promise.resolve()
+              : new Promise((res) => { img.onload = res; img.onerror = res; })
+          )
+        );
+
+        waitForImages.then(() => new Promise((r) => setTimeout(r, 300))).then(() => {
+          html2pdf()
+            .set({
+              margin: 0,
+              filename,
+              html2canvas: { scale: 2, useCORS: true, allowTaint: true, imageTimeout: 15000, logging: false },
+              jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+            })
+            .from(container)
+            .save()
+            .then(() => {
+              document.body.removeChild(container);
+              resolve();
+            })
+            .catch(() => {
+              document.body.removeChild(container);
+              resolve();
+            });
+        });
       });
     });
   };
