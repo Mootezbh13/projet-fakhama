@@ -24,16 +24,18 @@
 //   );
 //
 // VARIABLE D'ENVIRONNEMENT requise (Dashboard → Settings → Edge Functions) :
-//   CALLMEBOT_APIKEY  — clé API gratuite CallMeBot (https://www.callmebot.com/blog/free-api-whatsapp-messages/)
-//   PHONE_OVERRIDE    — (optionnel) numéro par défaut si le client n'a pas de téléphone
-//   FAKHAMA_PHONE     — +21693993619 (pour les notifications admin)
+//   WHATSAPP_CLOUD_API_TOKEN      — jeton d'accès WhatsApp Cloud API
+//   WHATSAPP_CLOUD_PHONE_NUMBER_ID — ID du numéro WhatsApp Cloud API
+//   PHONE_OVERRIDE                — (optionnel) numéro par défaut si le client n'a pas de téléphone
+//   FAKHAMA_PHONE                 — +21693993619 (pour les notifications admin)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const CALLMEBOT_APIKEY = Deno.env.get("CALLMEBOT_APIKEY") ?? "";
+const WHATSAPP_CLOUD_API_TOKEN = Deno.env.get("WHATSAPP_CLOUD_API_TOKEN") ?? "";
+const WHATSAPP_CLOUD_PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_CLOUD_PHONE_NUMBER_ID") ?? "";
 const FAKHAMA_PHONE = Deno.env.get("FAKHAMA_PHONE") ?? "21693993619";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -49,6 +51,15 @@ const addDays = (dateStr: string, n: number): string => {
 };
 
 const todayStr = () => new Date().toISOString().split("T")[0];
+
+const normalizePhone = (phoneRaw: unknown): string => {
+  const digits = String(phoneRaw ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("00216")) return digits.slice(2);
+  if (digits.startsWith("216")) return digits;
+  if (digits.startsWith("0")) return `216${digits.slice(1)}`;
+  return digits;
+};
 
 // ── Construire le message de rappel ──────────────────────────────────────────
 function buildMessage(booking: Record<string, unknown>): string {
@@ -72,22 +83,48 @@ ${booking.shooting_heures ? `📸 *Shooting :* ${booking.shooting_heures}h\n` : 
 _À très bientôt ✨_`.trim();
 }
 
-// ── Envoyer via CallMeBot (WhatsApp gratuit) ─────────────────────────────────
-async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
-  if (!CALLMEBOT_APIKEY) {
-    console.warn("CALLMEBOT_APIKEY non défini — simulation uniquement");
-    console.log(`[SIMULATION] → ${phone}: ${message.substring(0, 80)}...`);
-    return true;
-  }
-  // CallMeBot : https://api.callmebot.com/whatsapp.php?phone=PHONE&text=TEXT&apikey=KEY
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${CALLMEBOT_APIKEY}`;
-  try {
-    const res = await fetch(url);
-    return res.ok;
-  } catch (err) {
-    console.error("Erreur envoi WhatsApp:", err);
+// ── Envoyer via WhatsApp Cloud API ────────────────────────────────────────
+async function sendWhatsAppCloudAPI(phone: string, message: string): Promise<boolean> {
+  if (!WHATSAPP_CLOUD_API_TOKEN || !WHATSAPP_CLOUD_PHONE_NUMBER_ID) {
+    console.error("WhatsApp Cloud API non configurée.");
     return false;
   }
+
+  const url = `https://graph.facebook.com/v17.0/${WHATSAPP_CLOUD_PHONE_NUMBER_ID}/messages`;
+  const payload = {
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "text",
+    text: {
+      body: message,
+      preview_url: false,
+    },
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${WHATSAPP_CLOUD_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      console.error("WhatsApp Cloud API erreur:", res.status, data);
+      return false;
+    }
+    console.log("WhatsApp Cloud API envoyé:", data);
+    return true;
+  } catch (err) {
+    console.error("Erreur WhatsApp Cloud API:", err);
+    return false;
+  }
+}
+
+async function sendWhatsApp(phone: string, message: string): Promise<boolean> {
+  return sendWhatsAppCloudAPI(phone, message);
 }
 
 // ── Handler principal ────────────────────────────────────────────────────────
@@ -114,8 +151,12 @@ Deno.serve(async (_req) => {
       continue;
     }
 
-    const rawPhone = String(booking.phone).replace(/\D/g, "");
-    const phone = rawPhone.startsWith("216") ? rawPhone : `216${rawPhone}`;
+    const phone = normalizePhone(booking.phone);
+    if (!phone) {
+      console.warn(`Numéro invalide pour ${booking.client} (${booking.phone}) — rappel ignoré`);
+      continue;
+    }
+
     const message = buildMessage(booking);
     const sent = await sendWhatsApp(phone, message);
 

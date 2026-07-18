@@ -1181,35 +1181,19 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
   };
 
   const buildDevisMessage = (booking, docNum) => {
-    const decorationLabel = DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
     const itineraire = formatBookingItineraire(booking);
 
     return [
-      "🌸 *Fakhama Weddings & Events* 🌸",
-      "_BMW Série 3 2026_",
+      "Bonjour 👋",
       "",
-      "📋 *DEVIS DE RÉSERVATION*",
+      `Voici le devis de réservation pour ${booking.client || "le client"}.`,
+      `📄 Devis N° ${docNum}`,
+      `📅 Date : ${booking.date} à ${booking.heure}`,
+      `📍 Itinéraire : ${itineraire}`,
+      `💰 Prix total : ${formatCurrency(booking.prix)}`,
+      `✅ Acompte : ${formatCurrency(booking.avance || 0)}`,
       "",
-      `👤 *Client :* ${booking.client}`,
-      `📅 *Date :* ${booking.date} à ${booking.heure}`,
-      `📍 *Itinéraire :* ${itineraire}`,
-      `🛣️ *Distance :* ${booking.distance} km`,
-      `🔄 *Retour :* ${booking.retour ? `Oui${booking.lieuRetour ? ` (${booking.lieuRetour})` : ""}` : "Non"}`,
-      booking.shootingHeures ? `📸 *Shooting :* ${booking.shootingHeures}h${booking.lieuShooting ? ` — ${booking.lieuShooting}` : ""}` : null,
-      "",
-      "💍 *Détails événement :*",
-      `• Marié : ${booking.lieuMarie || "À confirmer"}`,
-      `• Mariée : ${booking.lieuMariee || "À confirmer"}`,
-      `• Salle : ${booking.salleFetes || "À confirmer"}`,
-      `• Décoration : ${decorationLabel}`,
-      "",
-      `📄 *DEVIS N° ${docNum}*`,
-      `💰 *Prix total :* ${formatCurrency(booking.prix)}`,
-      `✅ *Acompte 30% :* ${formatCurrency(booking.avance || 0)}`,
-      booking.reste > 0 ? `⏳ *Solde :* ${formatCurrency(booking.reste)}` : `✅ *Intégralement réglé*`,
-      "",
-      "📞 +216 93 993 619",
-      "_Merci pour votre confiance ✨_",
+      "Merci pour votre confiance ✨",
     ].filter((l) => l !== null).join("\n");
   };
 
