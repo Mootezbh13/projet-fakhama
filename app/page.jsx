@@ -1171,6 +1171,48 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
   // Raccourci dédié pour générer un devis (utilisé sur les réservations "En attente").
   const generateDevisPDF = (booking) => generateInvoiceEvenementPDF(booking, "devis");
 
+  const sendDevisByWhatsApp = (booking) => {
+    const docNum = getDocNumber(booking, "DEV");
+    const phone = booking.phone ? booking.phone.replace(/\D/g, "") : "";
+    const url = phone
+      ? `https://wa.me/${phone.startsWith("216") ? phone : "216" + phone}?text=${encodeURIComponent(buildDevisMessage(booking, docNum))}`
+      : `https://wa.me/?text=${encodeURIComponent(buildDevisMessage(booking, docNum))}`;
+    window.open(url, "_blank");
+  };
+
+  const buildDevisMessage = (booking, docNum) => {
+    const decorationLabel = DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
+    const itineraire = formatBookingItineraire(booking);
+
+    return [
+      "🌸 *Fakhama Weddings & Events* 🌸",
+      "_BMW Série 3 2026_",
+      "",
+      "📋 *DEVIS DE RÉSERVATION*",
+      "",
+      `👤 *Client :* ${booking.client}`,
+      `📅 *Date :* ${booking.date} à ${booking.heure}`,
+      `📍 *Itinéraire :* ${itineraire}`,
+      `🛣️ *Distance :* ${booking.distance} km`,
+      `🔄 *Retour :* ${booking.retour ? `Oui${booking.lieuRetour ? ` (${booking.lieuRetour})` : ""}` : "Non"}`,
+      booking.shootingHeures ? `📸 *Shooting :* ${booking.shootingHeures}h${booking.lieuShooting ? ` — ${booking.lieuShooting}` : ""}` : null,
+      "",
+      "💍 *Détails événement :*",
+      `• Marié : ${booking.lieuMarie || "À confirmer"}`,
+      `• Mariée : ${booking.lieuMariee || "À confirmer"}`,
+      `• Salle : ${booking.salleFetes || "À confirmer"}`,
+      `• Décoration : ${decorationLabel}`,
+      "",
+      `📄 *DEVIS N° ${docNum}*`,
+      `💰 *Prix total :* ${formatCurrency(booking.prix)}`,
+      `✅ *Acompte 30% :* ${formatCurrency(booking.avance || 0)}`,
+      booking.reste > 0 ? `⏳ *Solde :* ${formatCurrency(booking.reste)}` : `✅ *Intégralement réglé*`,
+      "",
+      "📞 +216 93 993 619",
+      "_Merci pour votre confiance ✨_",
+    ].filter((l) => l !== null).join("\n");
+  };
+
   const handleAddBooking = async () => {
     const errors = validateBookingComplete(newBooking, newBookingStops);
     if (Object.keys(errors).length > 0) {
@@ -2117,7 +2159,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         booking={b}
                         docNum={getDocNumber(b)}
                         onStatusChange={handleQuickStatusChange}
-                        onDevis={generateDevisPDF}
+                        onDevis={sendDevisByWhatsApp}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
                         onDelete={handleDeleteBooking}
@@ -2196,7 +2238,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                             <td className="border border-gray-300 px-4 py-2">
                               <div className="flex flex-wrap gap-1">
                                 {b.paiement === "En attente" ? (
-                                  <button onClick={() => generateDevisPDF(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
+                                  <button onClick={() => sendDevisByWhatsApp(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
                                 ) : (
                                   <button onClick={() => generateInvoiceEvenementPDF(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
                                 )}
