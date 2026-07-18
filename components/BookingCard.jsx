@@ -1,10 +1,10 @@
 import { PAIEMENT_STATUSES } from "../lib/constants";
-import { formatCurrency, paiementVariant } from "../lib/calculations";
+import { formatBookingItineraire, formatCurrency, paiementVariant } from "../lib/calculations";
 import Badge from "./Badge";
 import WhatsAppButton from "./WhatsAppButton";
 
 const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum, onStatusChange }) => {
-  const itineraire = b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet;
+  const itineraire = formatBookingItineraire(b);
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -16,7 +16,7 @@ const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum,
           <select
             value={b.paiement}
             onChange={(e) => onStatusChange(b, e.target.value)}
-            className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 ${
+            className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer appearance-auto focus:outline-none focus:ring-2 focus:ring-rose-400 ${
               b.paiement === "Payé" ? "bg-green-100 text-green-800" :
               b.paiement === "Avance" ? "bg-gray-100 text-gray-800" :
               b.paiement === "En attente" ? "bg-amber-100 text-amber-800" :

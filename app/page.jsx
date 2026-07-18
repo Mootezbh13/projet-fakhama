@@ -4,7 +4,7 @@ import { FAKHAMA_LOGO_BLACK_BASE64, FAKHAMA_LOGO_BROWN_BASE64, FAKHAMA_QR_BASE64
 import { supabase } from "../lib/supabaseClient";
 import { bookingToRow, rowToBooking, maintenanceToRow, rowToMaintenance, assuranceToRow, rowToAssurance, vignetteToRow, rowToVignette, carburantToRow, rowToCarburant } from "../lib/mappers";
 import { SUPPLEMENT_RETOUR, ACOMPTE_PERCENTAGE, PAIEMENT_STATUSES, DECORATION_OPTIONS, maintenancePlan } from "../lib/constants";
-import { timeToMinutes, formatCurrency, getMonthName, paiementVariant, calculateShootingCost, calculateTotalPrice, calculateAcompte } from "../lib/calculations";
+import { formatBookingItineraire, timeToMinutes, formatCurrency, getMonthName, paiementVariant, calculateShootingCost, calculateTotalPrice, calculateAcompte } from "../lib/calculations";
 import Badge from "../components/Badge";
 import Notification from "../components/Notification";
 import ConfirmModal from "../components/ConfirmModal";
@@ -277,7 +277,7 @@ export default function CarRentalManagement() {
     if (!booking.heure) errors.heure = "L'heure est requise";
     if (booking.avance < 0) errors.avance = "L'avance ne peut pas être négative";
     const isDuplicate = bookings.some(
-      (b) => b.date === booking.date && b.heure === booking.heure && b.client !== booking.client
+      (b) => b.id !== booking.id && b.date === booking.date && b.heure === booking.heure
     );
     if (isDuplicate) errors.duplicate = "Cette date et heure est déjà réservée";
     return errors;
@@ -354,9 +354,7 @@ export default function CarRentalManagement() {
     const dateFacture = new Date().toLocaleDateString("fr-FR");
     const decorationLabel =
       DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans et fleurs";
-    const itineraire = booking.trajetStops
-      ? ["Tunis", ...booking.trajetStops].join(" → ")
-      : booking.trajet || "Tunis";
+    const itineraire = formatBookingItineraire(booking);
 
     const eventDateObj = new Date(booking.date);
     const eventDateLabel = isNaN(eventDateObj)
@@ -635,9 +633,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
     const heureFacture = new Date().toLocaleTimeString("fr-FR");
     const decorationLabel =
       DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
-    const itineraire = booking.trajetStops
-      ? ["Tunis", ...booking.trajetStops].join(" → ")
-      : booking.trajet || "Tunis";
+    const itineraire = formatBookingItineraire(booking);
 
     const eventDateObj = new Date(booking.date);
     const eventMonth = isNaN(eventDateObj)
@@ -1831,8 +1827,8 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
           )}
 
           {selectedDayBookings && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDayBookings(null)}>
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
                 <div className="bg-gradient-to-r from-rose-600 to-amber-600 px-6 py-3 rounded-t-lg">
                   <h3 className="text-lg font-bold text-white">Réservations du {selectedDayBookings[0]?.date}</h3>
                 </div>
@@ -1842,7 +1838,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                       <p className="font-semibold text-gray-900">{booking.client}</p>
                       <p className="text-sm text-gray-600">Heure: {booking.heure}</p>
                       <p className="text-sm text-gray-600">
-                        Itinéraire: {booking.trajetStops ? ["Tunis", ...booking.trajetStops].join(" → ") : booking.trajet}
+                        Itinéraire: {formatBookingItineraire(booking)}
                       </p>
                       <Badge variant={paiementVariant(booking.paiement)}>
                         {booking.paiement}
@@ -2163,7 +2159,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                             <td className="border border-gray-300 px-4 py-2 text-gray-700 font-mono">{b.heure}</td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700 max-w-40">
                               <span className="text-xs">
-                                {b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet}
+                                {formatBookingItineraire(b)}
                               </span>
                             </td>
                             <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.distance || 0} km</td>
@@ -2319,7 +2315,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                           <td className="border border-gray-300 px-4 py-2 text-gray-700 font-mono">{b.heure}</td>
                           <td className="border border-gray-300 px-4 py-2 text-gray-700 max-w-40">
                             <span className="text-xs">
-                              {b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet}
+                              {formatBookingItineraire(b)}
                             </span>
                           </td>
                           <td className="border border-gray-300 px-4 py-2 text-gray-700">{b.distance || 0} km</td>
@@ -2733,8 +2729,8 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
 
           {/* EDIT MODAL */}
           {editBooking && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setEditBooking(null)}>
+              <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Modifier la réservation</h2>

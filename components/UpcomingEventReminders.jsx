@@ -1,4 +1,4 @@
-import { buildRappelMessage } from "../lib/calculations";
+import { buildRappelMessage, formatBookingItineraire } from "../lib/calculations";
 import Badge from "./Badge";
 
 const UpcomingEventReminders = ({ bookings }) => {
@@ -30,9 +30,7 @@ const UpcomingEventReminders = ({ bookings }) => {
     <div className="space-y-2 mb-4">
       {upcoming.map((b) => {
         const isUrgent = b.daysLeft <= 3;
-        const itineraire = b.trajetStops
-          ? ["Tunis", ...b.trajetStops].join(" → ")
-          : b.trajet || "Tunis";
+        const itineraire = formatBookingItineraire(b);
         const showRappel = b.daysLeft === 1 && b.phone;
         return (
           <div

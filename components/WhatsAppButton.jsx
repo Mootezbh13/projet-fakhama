@@ -1,5 +1,5 @@
 import { DECORATION_OPTIONS } from "../lib/constants";
-import { formatCurrency } from "../lib/calculations";
+import { formatBookingItineraire, formatCurrency } from "../lib/calculations";
 
 const WhatsAppButton = ({ booking, docNum, onFacture }) => {
   if (booking.paiement !== "Avance" && booking.paiement !== "Payé") return null;
@@ -15,17 +15,7 @@ const WhatsAppButton = ({ booking, docNum, onFacture }) => {
   const handleSend = () => {
     const decorationLabel =
       DECORATION_OPTIONS.find((d) => d.value === booking.decoration)?.label || "Rubans traditionnels";
-    const itineraire = booking.trajetStops
-      ? ["Tunis", ...booking.trajetStops].join(" → ")
-      : booking.trajet || "Tunis";
-
-    // Lance le téléchargement du PDF (facture ou devis selon le statut du paiement).
-    // On n'attend pas la fin de la génération avant d'ouvrir WhatsApp : certains
-    // navigateurs bloquent les popups ouvertes après un délai asynchrone. Le PDF
-    // se télécharge en parallèle, prêt à être joint manuellement à la conversation.
-    if (onFacture) {
-      onFacture(booking);
-    }
+    const itineraire = formatBookingItineraire(booking);
 
     const message = [
       "🌸 *Fakhama Weddings & Events* 🌸",
@@ -51,7 +41,6 @@ const WhatsAppButton = ({ booking, docNum, onFacture }) => {
       `✅ *Avance versée :* ${formatCurrency(booking.avance || 0)}`,
       booking.reste > 0 ? `⏳ *Reste à payer :* ${formatCurrency(booking.reste)}` : `✅ *Intégralement réglé*`,
       `🏷️ *Statut :* ${booking.paiement}`,
-      onFacture ? "📎 _Le PDF vient d'être téléchargé — pensez à le joindre à ce message._" : null,
       "",
       "📞 +216 93 993 619",
       "_Merci pour votre confiance ✨_",
@@ -69,7 +58,7 @@ const WhatsAppButton = ({ booking, docNum, onFacture }) => {
     <button
       onClick={handleSend}
       className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs flex items-center gap-1"
-      title="Télécharger le PDF et envoyer les détails par WhatsApp"
+      title="Envoyer les détails de la réservation par WhatsApp"
     >
       <WaIcon /> WhatsApp
     </button>

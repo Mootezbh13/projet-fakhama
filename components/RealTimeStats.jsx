@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { timeToMinutes, formatCurrency } from "../lib/calculations";
+import { timeToMinutes, formatCurrency, formatBookingItineraire } from "../lib/calculations";
 
 const RealTimeStats = ({ bookings }) => {
   const [now, setNow] = useState(new Date());
@@ -43,7 +43,7 @@ const RealTimeStats = ({ bookings }) => {
           <h4 className="font-semibold text-amber-800 mb-2">🚗 Réservations imminentes :</h4>
           {currentBookings.map((booking) => (
             <div key={booking.id} className="text-sm text-amber-700">
-              • {booking.client} à {booking.heure} - {booking.trajetStops ? ["Tunis", ...booking.trajetStops].join(" → ") : booking.trajet}
+              • {booking.client} à {booking.heure} - {formatBookingItineraire(booking)}
             </div>
           ))}
         </div>

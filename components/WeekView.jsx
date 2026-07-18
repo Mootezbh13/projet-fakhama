@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { timeToMinutes, getStartOfWeek } from "../lib/calculations";
+import { timeToMinutes, getStartOfWeek, formatBookingItineraire } from "../lib/calculations";
 
 const WeekView = ({ bookings, onDayClick, highlightDate }) => {
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
@@ -93,7 +93,7 @@ const WeekView = ({ bookings, onDayClick, highlightDate }) => {
                   >
                     <p className="font-semibold text-gray-800 truncate">{b.heure} · {b.client}</p>
                     <p className="text-gray-500 truncate">
-                      {b.trajetStops ? ["Tunis", ...b.trajetStops].join(" → ") : b.trajet}
+                      {formatBookingItineraire(b)}
                     </p>
                   </div>
                 ))}
