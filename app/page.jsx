@@ -2143,7 +2143,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         booking={b}
                         docNum={getDocNumber(b)}
                         onStatusChange={handleQuickStatusChange}
-                        onDevis={sendDevisByWhatsApp}
+                        onDevis={generateDevisPDF}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
                         onDelete={handleDeleteBooking}
@@ -2222,7 +2222,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                             <td className="border border-gray-300 px-4 py-2">
                               <div className="flex flex-wrap gap-1">
                                 {b.paiement === "En attente" ? (
-                                  <button onClick={() => sendDevisByWhatsApp(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
+                                  <button onClick={() => generateDevisPDF(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
                                 ) : (
                                   <button onClick={() => generateInvoiceEvenementPDF(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
                                 )}
