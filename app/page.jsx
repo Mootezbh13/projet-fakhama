@@ -1110,48 +1110,41 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       showNotification("Facture prestige générée avec succès", "success");
     });
   };
-  // Convertit une chaîne HTML en vrai fichier PDF téléchargé (utilisé par le devis et la facture).
-  // Retourne une Promise résolue une fois le PDF généré, pour pouvoir enchaîner une action après.
+  // Ouvre la facture/devis dans un nouvel onglet et lance l'impression navigateur —
+  // l'utilisateur choisit "Enregistrer en PDF" dans la boîte de dialogue d'impression.
+  // Plus fiable que html2canvas pour ce gabarit (cadre décoratif pleine page en base64).
   const downloadPDF = (html, filename) => {
-    return import("html2pdf.js").then(({ default: html2pdf }) => {
-      return new Promise((resolve) => {
-        const container = document.createElement("div");
-        container.style.position = "fixed";
-        container.style.left = "-99999px";
-        container.style.top = "0";
-        container.innerHTML = html;
-        document.body.appendChild(container);
+    return new Promise((resolve) => {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        alert("Merci d'autoriser les pop-ups pour générer le document.");
+        resolve();
+        return;
+      }
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.document.title = filename.replace(/\.pdf$/, "");
 
-        // Laisse le temps aux images base64 (cadre, logo, QR) de se décoder
-        // avant de lancer la capture — évite les PDF quasi vides.
-        const images = Array.from(container.querySelectorAll("img"));
-        const waitForImages = Promise.all(
-          images.map((img) =>
-            img.complete
-              ? Promise.resolve()
-              : new Promise((res) => { img.onload = res; img.onerror = res; })
-          )
-        );
+      const triggerPrint = () => {
+        printWindow.focus();
+        printWindow.print();
+        resolve();
+      };
 
-        waitForImages.then(() => new Promise((r) => setTimeout(r, 300))).then(() => {
-          html2pdf()
-            .set({
-              margin: 0,
-              filename,
-              html2canvas: { scale: 2, useCORS: true, allowTaint: true, imageTimeout: 15000, logging: false },
-              jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-            })
-            .from(container)
-            .save()
-            .then(() => {
-              document.body.removeChild(container);
-              resolve();
-            })
-            .catch(() => {
-              document.body.removeChild(container);
-              resolve();
-            });
-        });
+      // Attend le chargement des images (logo, QR, cadre) avant d'imprimer.
+      const images = Array.from(printWindow.document.querySelectorAll("img"));
+      if (images.length === 0) {
+        setTimeout(triggerPrint, 400);
+        return;
+      }
+      let loaded = 0;
+      const onOneLoaded = () => {
+        loaded++;
+        if (loaded === images.length) setTimeout(triggerPrint, 300);
+      };
+      images.forEach((img) => {
+        if (img.complete) onOneLoaded();
+        else { img.onload = onOneLoaded; img.onerror = onOneLoaded; }
       });
     });
   };
