@@ -423,7 +423,7 @@ export default function CarRentalManagement() {
             max-width: 680px;
             margin: 0 auto;
             background: #ffffff;
-            border: 1px solid #e6e6e6;
+            border: none;
             box-shadow: none;
             padding: 56px 52px;
           }
@@ -473,7 +473,7 @@ export default function CarRentalManagement() {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
-            border-bottom: 1px solid #d5d4cf;
+            border-bottom: none;
             font-size: 14px;
           }
           .d-item-label { color: #262626; padding-right: 20px; }
@@ -489,7 +489,7 @@ export default function CarRentalManagement() {
           }
           .d-total-row .d-tl { color: #6b6b6b; min-width: 170px; text-align: left; }
           .d-total-row .d-tv { min-width: 110px; text-align: right; font-weight: 600; }
-          .d-total-row.d-grand { border-top: 1px solid #1a1a1a; margin-top: 8px; padding-top: 12px; }
+          .d-total-row.d-grand { border-top: none; margin-top: 8px; padding-top: 12px; }
           .d-total-row.d-grand .d-tl { font-weight: 700; color: #1a1a1a; }
           .d-total-row.d-grand .d-tv { font-weight: 700; font-size: 17px; }
 
@@ -508,8 +508,8 @@ export default function CarRentalManagement() {
             display: inline-block;
             margin-top: 18px;
             padding: 5px 14px;
-            border: 1px solid #1a1a1a;
-            border-radius: 3px;
+            border: none;
+            background: transparent;
             font-size: 11px;
             letter-spacing: 0.08em;
             text-transform: uppercase;
