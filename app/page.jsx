@@ -1271,14 +1271,32 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
     });
   };
 
-  const handleQuickStatusChange = async (booking, newStatus) => {
+  const handleBookingStatusChange = async (booking, newStatus) => {
     const avance = newStatus === "Payé" ? booking.prix : booking.avance;
     const reste = calculateRest(booking.prix, avance, newStatus);
     const updated = { ...booking, paiement: newStatus, avance, reste };
     const { error } = await supabase.from("bookings").update(bookingToRow(updated)).eq("id", booking.id);
     if (error) { showNotification("Erreur lors du changement de statut", "error"); return; }
     setBookings((prev) => prev.map((b) => b.id === booking.id ? updated : b));
-    showNotification(`Statut mis à jour : ${newStatus}`, "success");
+    showNotification(newStatus === "Payé" ? "Réservation archivée après paiement ✓" : `Statut mis à jour : ${newStatus}`, "success");
+  };
+
+  const handleArchivePaidBooking = (booking) => {
+    setConfirmModal({
+      message: `Archiver la réservation de ${booking?.client || "ce client"} dans l’archive après validation du paiement ?`,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        await handleBookingStatusChange(booking, "Payé");
+      },
+    });
+  };
+
+  const handleQuickStatusChange = async (booking, newStatus) => {
+    if (newStatus === "Payé") {
+      handleArchivePaidBooking(booking);
+      return;
+    }
+    await handleBookingStatusChange(booking, newStatus);
   };
 
   const handleDuplicateBooking = (b) => {
@@ -2146,6 +2164,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         onDevis={generateDevisPDF}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
+                        onArchive={handleArchivePaidBooking}
                         onDelete={handleDeleteBooking}
                       />
                     ))}
@@ -2206,6 +2225,8 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                               <select
                                 value={b.paiement}
                                 onChange={(e) => handleQuickStatusChange(b, e.target.value)}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
                                 className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-400 ${
                                   b.paiement === "Payé" ? "bg-green-100 text-green-800" :
                                   b.paiement === "Avance" ? "bg-gray-100 text-gray-800" :
@@ -2222,17 +2243,22 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                             <td className="border border-gray-300 px-4 py-2">
                               <div className="flex flex-wrap gap-1">
                                 {b.paiement === "En attente" ? (
-                                  <button onClick={() => generateDevisPDF(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); generateDevisPDF(b); }} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
                                 ) : (
-                                  <button onClick={() => generateInvoiceEvenementPDF(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
+                                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); generateInvoiceEvenementPDF(b); }} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
                                 )}
                                 <WhatsAppButton booking={b} docNum={getDocNumber(b)} onFacture={generateInvoiceEvenementPDF} />
-                                <button onClick={() => {
+                                <button type="button" onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   setEditBooking(b);
                                   setEditBookingStops(b.trajetStops || [b.trajet || "Tunis"]);
                                 }} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>
-                                <button onClick={() => handleDuplicateBooking(b)} className="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">📋 Copier</button>
-                                <button onClick={() => handleDeleteBooking(b.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>
+                                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDuplicateBooking(b); }} className="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">📋 Copier</button>
+                                {b.paiement !== "Payé" && (
+                                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleArchivePaidBooking(b); }} className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs">✓ Archiver</button>
+                                )}
+                                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteBooking(b.id); }} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>
                               </div>
                             </td>
                           </tr>
@@ -2316,6 +2342,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                         onStatusChange={handleQuickStatusChange}
                         onFacture={generateInvoiceEvenementPDF}
                         onEdit={(bk) => { setEditBooking(bk); setEditBookingStops(bk.trajetStops || [bk.trajet || "Tunis"]); }}
+                        onArchive={handleArchivePaidBooking}
                         onDelete={handleDeleteBooking}
                       />
                     ))}
@@ -2755,12 +2782,12 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
 
           {/* EDIT MODAL */}
           {editBooking && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setEditBooking(null)}>
-              <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={() => setEditBooking(null)}>
+              <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl relative z-[61] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                 <div className="p-6 space-y-4">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-bold text-gray-900">Modifier la réservation</h2>
-                    <button onClick={() => setEditBooking(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditBooking(null); }} className="text-gray-400 hover:text-gray-600">✕</button>
                   </div>
 
                   <div>
@@ -2855,9 +2882,12 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                       <textarea value={editBooking.commentaires || ""} onChange={(e) => setEditBooking({ ...editBooking, commentaires: e.target.value })} className={`${inputClass} h-20`} />
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <button onClick={() => setEditBooking(null)} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Annuler</button>
-                    <button onClick={handleSaveEdit} className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 text-white rounded-md hover:from-rose-700 hover:to-amber-700">Enregistrer</button>
+                  <div className="flex flex-wrap justify-end gap-2 pt-4">
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditBooking(null); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Annuler</button>
+                    {editBooking.paiement === "Payé" && (
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleArchivePaidBooking(editBooking); }} className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Confirmer l’archivage</button>
+                    )}
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveEdit(); }} className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 text-white rounded-md hover:from-rose-700 hover:to-amber-700">Enregistrer</button>
                   </div>
                 </div>
               </div>

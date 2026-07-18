@@ -3,10 +3,16 @@ import { formatBookingItineraire, formatCurrency, paiementVariant } from "../lib
 import Badge from "./Badge";
 import WhatsAppButton from "./WhatsAppButton";
 
-const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum, onStatusChange }) => {
+const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum, onStatusChange, onArchive }) => {
   const itineraire = formatBookingItineraire(b);
+  const handleActionClick = (event, callback, payload) => {
+    event.preventDefault();
+    event.stopPropagation();
+    callback?.(payload);
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3">
+    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3 relative z-10">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-gray-900">{b.client}</p>
@@ -15,7 +21,9 @@ const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum,
         {onStatusChange ? (
           <select
             value={b.paiement}
-            onChange={(e) => onStatusChange(b, e.target.value)}
+            onChange={(e) => onStatusChange?.(b, e.target.value)}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className={`text-xs font-semibold rounded-full px-2 py-1 border-0 cursor-pointer appearance-auto focus:outline-none focus:ring-2 focus:ring-rose-400 ${
               b.paiement === "Payé" ? "bg-green-100 text-green-800" :
               b.paiement === "Avance" ? "bg-gray-100 text-gray-800" :
@@ -62,15 +70,16 @@ const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum,
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 pt-1">
+      <div className="flex flex-wrap gap-1.5 pt-1 relative z-10">
         {onDevis && b.paiement === "En attente" ? (
-          <button onClick={() => onDevis(b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
+          <button type="button" onClick={(e) => handleActionClick(e, onDevis, b)} className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">📝 Devis</button>
         ) : (
-          onFacture && <button onClick={() => onFacture(b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
+          onFacture && <button type="button" onClick={(e) => handleActionClick(e, onFacture, b)} className="px-2 py-1 bg-rose-600 text-white rounded hover:bg-rose-700 text-xs">💍 Facture</button>
         )}
         <WhatsAppButton booking={b} docNum={docNum} onFacture={onFacture} />
-        {onEdit && <button onClick={() => onEdit(b)} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>}
-        {onDelete && <button onClick={() => onDelete(b.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>}
+        {onEdit && <button type="button" onClick={(e) => handleActionClick(e, onEdit, b)} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>}
+        {onArchive && b.paiement !== "Payé" && <button type="button" onClick={(e) => handleActionClick(e, onArchive, b)} className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs">✓ Archiver</button>}
+        {onDelete && <button type="button" onClick={(e) => handleActionClick(e, onDelete, b.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>}
       </div>
     </div>
   );
