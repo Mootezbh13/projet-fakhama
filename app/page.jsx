@@ -400,18 +400,31 @@ export default function CarRentalManagement() {
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
         <style>
           * { box-sizing: border-box; }
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          @page {
+            @top-left { content: none; }
+            @top-center { content: none; }
+            @top-right { content: none; }
+            @bottom-left { content: none; }
+            @bottom-center { content: none; }
+            @bottom-right { content: none; }
+          }
           body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 48px 16px;
-            background: #d9d9d6;
+            background: #ffffff;
             color: #1a1a1a;
           }
           .d-container {
             max-width: 680px;
             margin: 0 auto;
-            background: #f2f1ee;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+            background: #ffffff;
+            border: 1px solid #e6e6e6;
+            box-shadow: none;
             padding: 56px 52px;
           }
           .d-top {
@@ -1124,6 +1137,16 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.document.title = filename.replace(/\.pdf$/, "");
+
+      try {
+        printWindow.history.replaceState(
+          null,
+          filename.replace(/\.pdf$/, ""),
+          "/devis"
+        );
+      } catch (err) {
+        // ignore cases where history replace isn't available
+      }
 
       const triggerPrint = () => {
         printWindow.focus();
