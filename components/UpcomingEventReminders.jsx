@@ -1,7 +1,7 @@
 import { buildRappelMessage, formatBookingItineraire } from "../lib/calculations";
 import Badge from "./Badge";
 
-const UpcomingEventReminders = ({ bookings }) => {
+const UpcomingEventReminders = ({ bookings, onSelectBooking }) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -12,7 +12,7 @@ const UpcomingEventReminders = ({ bookings }) => {
       const daysLeft = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
       return { ...b, daysLeft };
     })
-    .filter((b) => b.daysLeft >= 0 && b.daysLeft <= 10)
+    .filter((b) => b.daysLeft >= 0 && b.daysLeft <= 10 && b.paiement !== "Payé")
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   if (upcoming.length === 0) return null;
@@ -35,12 +35,13 @@ const UpcomingEventReminders = ({ bookings }) => {
         return (
           <div
             key={b.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium shadow-sm ${
+            onClick={() => onSelectBooking && onSelectBooking(b)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm font-medium shadow-sm cursor-pointer transition-all hover:shadow-md ${
               b.daysLeft === 0
-                ? "bg-red-100 border-red-400 text-red-900"
+                ? "bg-red-100 border-red-400 text-red-900 hover:bg-red-200"
                 : isUrgent
-                ? "bg-red-50 border-red-300 text-red-800"
-                : "bg-amber-50 border-amber-300 text-amber-800"
+                ? "bg-red-50 border-red-300 text-red-800 hover:bg-red-100"
+                : "bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100"
             }`}
           >
             <span className="text-xl">
@@ -53,7 +54,7 @@ const UpcomingEventReminders = ({ bookings }) => {
             </span>
             {showRappel && (
               <button
-                onClick={() => sendRappel(b)}
+                onClick={(e) => { e.stopPropagation(); sendRappel(b); }}
                 className="flex items-center gap-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg font-semibold shrink-0"
                 title={`Envoyer rappel J-1 à ${b.client}`}
               >

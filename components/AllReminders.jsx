@@ -1,9 +1,9 @@
 import InsuranceExpiryWarning from "./InsuranceExpiryWarning";
 import UpcomingEventReminders from "./UpcomingEventReminders";
 
-const AllReminders = ({ bookings, assurances }) => (
+const AllReminders = ({ bookings, assurances, onSelectBooking }) => (
   <>
-    <UpcomingEventReminders bookings={bookings} />
+    <UpcomingEventReminders bookings={bookings} onSelectBooking={onSelectBooking} />
     <InsuranceExpiryWarning assurances={assurances} />
   </>
 );

@@ -1794,7 +1794,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
 
           {activeTab === "dashboard" && (
             <div className="space-y-6">
-              <AllReminders bookings={bookings} assurances={assurances} />
+              <AllReminders bookings={bookings} assurances={assurances} onSelectBooking={(booking) => { setEditBooking(booking); setEditBookingStops(booking.trajetStops || [booking.trajet || "Tunis"]); }} />
               <RealTimeStats bookings={bookings} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -1898,7 +1898,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
           {/* RESERVATIONS TAB */}
           {activeTab === "reservations" && (
             <>
-              <AllReminders bookings={bookings} assurances={assurances} />
+              <AllReminders bookings={bookings} assurances={assurances} onSelectBooking={(booking) => { setEditBooking(booking); setEditBookingStops(booking.trajetStops || [booking.trajet || "Tunis"]); }} />
 
               {/* Calendrier des réservations — toggle */}
               <div className="mb-4">
@@ -2633,7 +2633,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
           {activeTab === "assurances" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">🛡️ Assurances</h2>
-              <AllReminders bookings={bookings} assurances={assurances} />
+              <AllReminders bookings={bookings} assurances={assurances} onSelectBooking={(booking) => { setEditBooking(booking); setEditBookingStops(booking.trajetStops || [booking.trajet || "Tunis"]); }} />
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">➕ Ajouter une Assurance</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
