@@ -2255,9 +2255,6 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                                   setEditBookingStops(b.trajetStops || [b.trajet || "Tunis"]);
                                 }} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>
                                 <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDuplicateBooking(b); }} className="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">📋 Copier</button>
-                                {b.paiement !== "Payé" && (
-                                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleArchivePaidBooking(b); }} className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs">✓ Archiver</button>
-                                )}
                                 <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteBooking(b.id); }} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>
                               </div>
                             </td>
@@ -2882,11 +2879,8 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
                       <textarea value={editBooking.commentaires || ""} onChange={(e) => setEditBooking({ ...editBooking, commentaires: e.target.value })} className={`${inputClass} h-20`} />
                     </div>
                   </div>
-                  <div className="flex flex-wrap justify-end gap-2 pt-4">
+                  <div className="flex justify-end gap-2 pt-4">
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditBooking(null); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Annuler</button>
-                    {editBooking.paiement === "Payé" && (
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleArchivePaidBooking(editBooking); }} className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700">Confirmer l’archivage</button>
-                    )}
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveEdit(); }} className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 text-white rounded-md hover:from-rose-700 hover:to-amber-700">Enregistrer</button>
                   </div>
                 </div>

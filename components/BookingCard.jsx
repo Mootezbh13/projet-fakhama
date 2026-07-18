@@ -78,7 +78,6 @@ const BookingCard = ({ booking: b, onEdit, onDelete, onDevis, onFacture, docNum,
         )}
         <WhatsAppButton booking={b} docNum={docNum} onFacture={onFacture} />
         {onEdit && <button type="button" onClick={(e) => handleActionClick(e, onEdit, b)} className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-gray-700 text-xs">Modifier</button>}
-        {onArchive && b.paiement !== "Payé" && <button type="button" onClick={(e) => handleActionClick(e, onArchive, b)} className="px-2 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-xs">✓ Archiver</button>}
         {onDelete && <button type="button" onClick={(e) => handleActionClick(e, onDelete, b.id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Supprimer</button>}
       </div>
     </div>
