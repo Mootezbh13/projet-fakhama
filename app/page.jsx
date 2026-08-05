@@ -514,20 +514,30 @@ export default function CarRentalManagement() {
             print-color-adjust: exact;
           }
           .d-container {
+            position: relative;
             max-width: 680px;
             margin: 0 auto;
-            /* Decorative full-page frame behind content (uses provided base64 image) */
             background-color: #ffffff;
-            background-image: url("${FAKHAMA_FRAME_BASE64_IMPORT}");
-            background-position: center top;
-            background-repeat: no-repeat;
-            background-size: contain;
             border: none;
             box-shadow: none;
-            /* padding to keep content away from the decorative frame */
             padding: 48px 40px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+          .d-container > .d-frame {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center top;
+            z-index: 0;
+            opacity: 1;
+            pointer-events: none;
+          }
+          .d-container > *:not(.d-frame) {
+            position: relative;
+            z-index: 1;
           }
           .d-top {
             display: flex;
@@ -649,6 +659,7 @@ export default function CarRentalManagement() {
       </head>
       <body>
         <div class="d-container">
+          <img class="d-frame" src="${FAKHAMA_FRAME_BASE64_IMPORT}" alt="" aria-hidden="true" />
 
           <div class="d-top">
             <div>
@@ -947,14 +958,21 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
             position: relative;
             width: 210mm;
             height: 297mm;
-            background-image: url(${FACTURE_FRAME_BASE64});
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-position: center;
+            background-color: #ffffff;
             box-shadow: 0 20px 60px rgba(50,40,20,0.35);
             margin: 0 auto 10mm;
             page-break-after: always;
             overflow: hidden;
+          }
+          .page-frame {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            z-index: 0;
+            pointer-events: none;
           }
           .page:last-child { page-break-after: auto; }
 
@@ -1202,6 +1220,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       <body>
 
         <div class="page">
+          <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" aria-hidden="true" />
           <div class="content">
             <div class="content-inner">
               ${page1Content}
@@ -1210,6 +1229,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
         </div>
 
         <div class="page">
+          <img class="page-frame" src="${FACTURE_FRAME_BASE64}" alt="" aria-hidden="true" />
           <div class="content">
             <div class="content-inner">
               ${page2Content}
