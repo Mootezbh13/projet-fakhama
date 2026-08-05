@@ -319,19 +319,7 @@ export default function CarRentalManagement() {
   };
 
   // ── Facture évènement — format A4, imprimable directement ────────────────────
-  // TODO (facture PDF réelle) : cette fonction génère un fichier .html téléchargeable
-  // et imprimable depuis le navigateur (fonctionne partout, sans dépendance). Pour un
-  // vrai fichier PDF généré côté serveur : Supabase Edge Function + Puppeteer, ou
-  // jsPDF côté client (npm install jspdf, puis construire le PDF programmatiquement
-  // plutôt que via du HTML).
-  //
-  // documentType: "facture" (par défaut) ou "devis". Depuis la refonte, le devis a
-  // son propre gabarit minimaliste (façon carte de visite / invoice moderne, noir &
-  // blanc) totalement distinct de la facture qui garde son habillage "carton
-  // d'invitation" doré. Les deux affichent désormais le logo Fakhama ainsi que le
-  // QR code de la page Facebook.
-  // Génère un numéro séquentiel lisible : FAC-2026-001 / DEV-2026-001
-  // Basé sur le rang de la réservation parmi toutes les réservations triées par date croissante.
+  
   const getDocNumber = (booking, type = "FAC") => {
     const year = new Date(booking.date).getFullYear() || new Date().getFullYear();
     const sorted = [...bookings].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -416,14 +404,21 @@ export default function CarRentalManagement() {
             padding: 48px 16px;
             background: #ffffff;
             color: #1a1a1a;
+            /* Help printing engines keep exact colors/backgrounds where supported */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .d-container {
             max-width: 680px;
             margin: 0 auto;
-            background: #ffffff;
+            /* Decorative full-page frame behind content (uses provided base64 image) */
+            background: #ffffff url("${FAKHAMA_FRAME_BASE64}") no-repeat center/contain;
             border: none;
             box-shadow: none;
-            padding: 56px 52px;
+            /* extra padding so content doesn't touch the frame edges */
+            padding: 80px 64px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .d-top {
             display: flex;
@@ -535,9 +530,11 @@ export default function CarRentalManagement() {
           .d-qr-wrap img { width: 84px; height: 84px; display: block; margin: 0 auto 6px; }
           .d-qr-wrap p { font-size: 10px; color: #6b6b6b; margin: 0; }
 
+          /* Improve printing of backgrounds and images on some mobile/desktop printers */
           @media print {
-            body { background: white; padding: 0; }
-            .d-container { box-shadow: none; }
+            body { background: white !important; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .d-container { box-shadow: none; background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
         </style>
       </head>
