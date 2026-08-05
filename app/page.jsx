@@ -716,7 +716,7 @@ export default function CarRentalManagement() {
       </html>
     `;
 
-    return downloadPDFWithRasterFallback(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+    return downloadPDF(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
       showNotification("Devis généré avec succès", "success");
     });
   };
@@ -1221,7 +1221,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       </html>
     `;
 
-    return downloadPDFWithRasterFallback(factureHTML, `facture-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+    return downloadPDF(factureHTML, `facture-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
       showNotification("Facture prestige générée avec succès", "success");
     });
   };
