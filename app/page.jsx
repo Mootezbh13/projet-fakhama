@@ -517,11 +517,15 @@ export default function CarRentalManagement() {
             max-width: 680px;
             margin: 0 auto;
             /* Decorative full-page frame behind content (uses provided base64 image) */
-            background: #ffffff url("${FAKHAMA_FRAME_BASE64_IMPORT}") no-repeat center/contain;
+            background-color: #ffffff;
+            background-image: url("${FAKHAMA_FRAME_BASE64_IMPORT}");
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-size: contain;
             border: none;
             box-shadow: none;
-            /* extra padding so content doesn't touch the frame edges */
-            padding: 80px 64px;
+            /* padding to keep content away from the decorative frame */
+            padding: 48px 40px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -930,12 +934,12 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
         <style>
           * { box-sizing: border-box; }
           @page { size: A4; margin: 0; }
-          html { background: #cfc4a8; }
+          html { background: #ffffff; }
           body {
             font-family: 'Cormorant Garamond', serif;
             margin: 0;
             padding: 10mm 0;
-            background: #cfc4a8;
+            background: #ffffff;
             color: #2b2013;
           }
 

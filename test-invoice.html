@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test Invoice</title>
+<style>
+  @page { size: A4; margin: 0 }
+  html,body { background: #ffffff; margin:0; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  body { font-family: Arial, Helvetica, sans-serif; }
+  .d-container {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 8mm auto; /* leave small margin for viewer */
+    background-color: #ffffff;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 48px 40px;
+    box-shadow: none;
+    border: none;
+  }
+  .d-doc-title { font-size: 36px; font-weight:700; text-align:right }
+  .d-info { margin-top: 20px; display:flex; justify-content:space-between }
+  .d-section-title { font-size: 22px; margin-top: 30px }
+</style>
+</head>
+<body>
+  <div class="d-container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40'><rect width='100%' height='100%' fill='transparent'/><text x='0' y='28' font-size='20' fill='black'>Fakhama</text></svg>" alt="logo" style="max-width:160px; height:auto" />
+        <p style="margin:6px 0 0; color:#6b6b6b">Weddings & Events</p>
+      </div>
+      <div>
+        <div class="d-doc-title">FACTURE</div>
+        <div style="text-align:right; color:#6b6b6b">N° FAC-2026-001<br/>Émis le 05/08/2026</div>
+      </div>
+    </div>
+
+    <div class="d-info">
+      <div>
+        <strong>Client</strong><br/>M. Test
+      </div>
+      <div style="text-align:right">
+        <strong>Évènement</strong><br/>12 août 2026
+      </div>
+    </div>
+
+    <h3 class="d-section-title">Description</h3>
+    <p>Forfait évènement — Salle des fêtes</p>
+
+    <div style="margin-top:40px; display:flex; justify-content:flex-end">
+      <div style="width:240px; text-align:right">
+        <div>Sous-total: <strong>1000 TND</strong></div>
+        <div style="margin-top:8px">Total estimé — TTC: <strong>1000 TND</strong></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
