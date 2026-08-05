@@ -25,6 +25,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Page setup for printing: force A4, remove default margins and size invoice containers */
+@page { size: A4; margin: 0 }
+
 /* Improve printing on mobile/desktop: ask printing engines to keep exact colors/backgrounds */
 @media print {
   html, body {
@@ -32,12 +35,20 @@ body {
     print-color-adjust: exact !important;
     background: var(--background) !important;
     color: var(--foreground) !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   /* Apply to common invoice container classes used in templates */
   .d-container, .invoice, .facture, .receipt {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background: #ffffff !important;
+    /* Match A4 dimensions to avoid extra white bands and ensure predictable slicing when rasterizing */
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    page-break-after: always !important;
   }
   img, svg {
     -webkit-print-color-adjust: exact !important;

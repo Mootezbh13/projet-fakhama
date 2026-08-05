@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FAKHAMA_LOGO_BLACK_BASE64, FAKHAMA_LOGO_BROWN_BASE64, FAKHAMA_QR_BASE64, FACTURE_FRAME_BASE64, FAKHAMA_FRAME_BASE64 } from "../lib/assets";
+import { FAKHAMA_LOGO_BLACK_BASE64, FAKHAMA_LOGO_BROWN_BASE64, FAKHAMA_QR_BASE64, FACTURE_FRAME_BASE64, FAKHAMA_FRAME_BASE64 as FAKHAMA_FRAME_BASE64_IMPORT } from "../lib/assets";
 import { supabase } from "../lib/supabaseClient";
 import { bookingToRow, rowToBooking, maintenanceToRow, rowToMaintenance, assuranceToRow, rowToAssurance, vignetteToRow, rowToVignette, carburantToRow, rowToCarburant } from "../lib/mappers";
 import { SUPPLEMENT_RETOUR, ACOMPTE_PERCENTAGE, PAIEMENT_STATUSES, DECORATION_OPTIONS, maintenancePlan } from "../lib/constants";
@@ -352,13 +352,47 @@ export default function CarRentalManagement() {
               function renderAndDownload(){
                 try {
                   const docEl = document.body;
-                  // Use a higher scale for better resolution
-                  html2canvas(docEl, { useCORS: true, scale: 2 }).then(function(canvas){
-                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                  // Use a higher scale for better resolution; adjust if file size becomes too large
+                  const scale = 2;
+                  html2canvas(docEl, { useCORS: true, scale: scale }).then(function(canvas){
                     const { jsPDF } = window.jspdf;
-                    // Create a PDF with the same pixel dimensions as the canvas
-                    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
-                    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+
+                    // Calculate A4 page height in px using the canvas width (maintain aspect ratio)
+                    // A4 ratio: 210mm x 297mm -> height/width = 297/210
+                    const pageRatio = 297 / 210;
+                    const pageWidthPx = canvas.width;
+                    const pageHeightPx = Math.round(pageWidthPx * pageRatio);
+
+                    const pdf = new jsPDF({ unit: 'px', format: [pageWidthPx, pageHeightPx] });
+
+                    // Slice the large canvas vertically into A4-height pages
+                    let y = 0;
+                    let pageCount = 0;
+                    while (y < canvas.height) {
+                      const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
+                      const pageCanvas = document.createElement('canvas');
+                      pageCanvas.width = canvas.width;
+                      pageCanvas.height = sliceHeight;
+                      const ctx = pageCanvas.getContext('2d');
+                      // fill white background to avoid transparency showing through
+                      ctx.fillStyle = '#ffffff';
+                      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                      ctx.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+
+                      const imgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+
+                      if (pageCount === 0) {
+                        // first page already created with desired size
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthPx, pageHeightPx);
+                      } else {
+                        pdf.addPage([pageWidthPx, pageHeightPx]);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidthPx, pageHeightPx);
+                      }
+
+                      y += sliceHeight;
+                      pageCount++;
+                    }
+
                     pdf.save("${filename}");
                     setTimeout(function(){ window.close(); }, 700);
                   }).catch(function(err){
@@ -483,7 +517,7 @@ export default function CarRentalManagement() {
             max-width: 680px;
             margin: 0 auto;
             /* Decorative full-page frame behind content (uses provided base64 image) */
-            background: #ffffff url("${FAKHAMA_FRAME_BASE64}") no-repeat center/contain;
+            background: #ffffff url("${FAKHAMA_FRAME_BASE64_IMPORT}") no-repeat center/contain;
             border: none;
             box-shadow: none;
             /* extra padding so content doesn't touch the frame edges */
