@@ -319,6 +319,77 @@ export default function CarRentalManagement() {
   };
 
   // ── Facture évènement — format A4, imprimable directement ────────────────────
+  // downloadPDFWithRasterFallback: opens the generated HTML in a new window and uses html2canvas + jsPDF
+  // (loaded from CDNs) to rasterize the page to a high-quality PDF. This ensures decorative
+  // backgrounds/frames are preserved on mobile where browser "Save as PDF" may drop CSS
+  // backgrounds. Falls back to a simple HTML download or print if the pop-up is blocked.
+  const downloadPDFWithRasterFallback = (html, filename) => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Try to open a new window/tab for the HTML content
+        const win = typeof window !== 'undefined' ? window.open('', '_blank') : null;
+        if (!win) {
+          // If blocked, fallback to offering the HTML file for download so the user can open it manually
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename.replace(/\.pdf$/i, '.html');
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          resolve();
+          return;
+        }
+
+        // Script to load html2canvas + jsPDF and generate the PDF once the page is ready
+        const loaderAndRenderScript = `
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+          <script>
+            (function(){
+              function renderAndDownload(){
+                try {
+                  const docEl = document.body;
+                  // Use a higher scale for better resolution
+                  html2canvas(docEl, { useCORS: true, scale: 2 }).then(function(canvas){
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    const { jsPDF } = window.jspdf;
+                    // Create a PDF with the same pixel dimensions as the canvas
+                    const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
+                    pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+                    pdf.save("${filename}");
+                    setTimeout(function(){ window.close(); }, 700);
+                  }).catch(function(err){
+                    console.error('html2canvas/pdf error', err);
+                    // fallback to print dialog
+                    window.print();
+                    setTimeout(function(){ window.close(); }, 700);
+                  });
+                } catch (err) {
+                  console.error(err);
+                  window.print();
+                  setTimeout(function(){ window.close(); }, 700);
+                }
+              }
+              if (document.readyState === 'complete') renderAndDownload();
+              else window.addEventListener('load', renderAndDownload);
+            })();
+          <\/script>`;
+
+        // Inject the loader script just before </body>
+        const finalHtml = html.replace(/<\/body>/i, loaderAndRenderScript + '</body>');
+        win.document.open();
+        win.document.write(finalHtml);
+        win.document.close();
+
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
   
   const getDocNumber = (booking, type = "FAC") => {
     const year = new Date(booking.date).getFullYear() || new Date().getFullYear();
@@ -607,7 +678,7 @@ export default function CarRentalManagement() {
       </html>
     `;
 
-    return downloadPDF(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+    return downloadPDFWithRasterFallback(devisHTML, `devis-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
       showNotification("Devis généré avec succès", "success");
     });
   };
@@ -1112,7 +1183,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
       </html>
     `;
 
-    return downloadPDF(factureHTML, `facture-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
+    return downloadPDFWithRasterFallback(factureHTML, `facture-FWE-${booking.client}-${booking.date}.pdf`).then(() => {
       showNotification("Facture prestige générée avec succès", "success");
     });
   };
