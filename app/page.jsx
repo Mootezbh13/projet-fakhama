@@ -1123,7 +1123,7 @@ const generateFactureHTML = (booking, docNum = `FAC-${new Date().getFullYear()}-
             color: #1e1609;
             text-align: left;
             padding: 13px 16px;
-            background: rgba(245, 241, 230, 0.75);
+            background: rgba(255,255,255,0.12);
             border: 1px solid ${accentDivider};
           }
           .terms-page2 p { margin: 0 0 7px; }
