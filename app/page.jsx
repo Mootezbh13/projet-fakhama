@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FAKHAMA_LOGO_BLACK_BASE64, FAKHAMA_LOGO_BROWN_BASE64, FAKHAMA_QR_BASE64, FACTURE_FRAME_BASE64, FAKHAMA_FRAME_BASE64 as FAKHAMA_FRAME_BASE64_IMPORT } from "../lib/assets";
+import { FAKHAMA_LOGO_BLACK_BASE64, FAKHAMA_LOGO_BROWN_BASE64, FAKHAMA_QR_BASE64, FACTURE_FRAME_BASE64 } from "../lib/assets";
 import { supabase } from "../lib/supabaseClient";
 import { bookingToRow, rowToBooking, maintenanceToRow, rowToMaintenance, assuranceToRow, rowToAssurance, vignetteToRow, rowToVignette, carburantToRow, rowToCarburant } from "../lib/mappers";
 import { SUPPLEMENT_RETOUR, ACOMPTE_PERCENTAGE, PAIEMENT_STATUSES, DECORATION_OPTIONS, maintenancePlan } from "../lib/constants";
@@ -659,8 +659,6 @@ export default function CarRentalManagement() {
       </head>
       <body>
         <div class="d-container">
-          <img class="d-frame" src="${FAKHAMA_FRAME_BASE64_IMPORT}" alt="" aria-hidden="true" />
-
           <div class="d-top">
             <div>
               <img class="d-brand-logo" src="${FAKHAMA_LOGO_BLACK_BASE64}" alt="Fakhama Weddings & Events" />
