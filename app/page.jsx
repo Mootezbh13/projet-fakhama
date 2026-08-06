@@ -515,12 +515,12 @@ export default function CarRentalManagement() {
           }
           .d-container {
             position: relative;
-            max-width: 680px;
+            max-width: 640px;
             margin: 0 auto;
             background-color: #ffffff;
             border: none;
             box-shadow: none;
-            padding: 48px 40px;
+            padding: 64px 48px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -543,8 +543,11 @@ export default function CarRentalManagement() {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 36px;
+            margin-bottom: 28px;
           }
+          /* Make left block expand and keep title block on the right */
+          .d-top > div:first-child { flex: 1; }
+          .d-top > div:last-child { flex: 0 0 36%; text-align: right; }
           .d-brand-logo { max-width: 190px; height: auto; margin-bottom: 10px; }
           .d-brand-name {
             font-family: 'Space Grotesk', sans-serif;
@@ -556,20 +559,22 @@ export default function CarRentalManagement() {
           .d-brand-sub { font-size: 12px; color: #6b6b6b; margin: 2px 0 0; }
           .d-doc-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 40px;
+            font-size: 56px;
             font-weight: 700;
             letter-spacing: -0.02em;
             text-align: right;
             margin: 0;
+            line-height: 1;
           }
           .d-doc-number { text-align: right; font-size: 13px; color: #6b6b6b; margin-top: 6px; }
 
           .d-info-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 220px;
             gap: 20px;
-            margin: 36px 0 8px;
+            margin: 28px 0 8px;
             font-size: 13px;
+            align-items: start;
           }
           .d-info-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #8a8a86; margin: 0 0 4px; }
           .d-info-value { margin: 0 0 2px; font-size: 14px; }
