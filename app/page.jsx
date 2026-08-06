@@ -506,7 +506,7 @@ export default function CarRentalManagement() {
           body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 48px 16px;
+            padding: 24px 12px;
             background: #ffffff;
             color: #1a1a1a;
             /* Help printing engines keep exact colors/backgrounds where supported */
@@ -515,12 +515,12 @@ export default function CarRentalManagement() {
           }
           .d-container {
             position: relative;
-            max-width: 640px;
+            max-width: 620px;
             margin: 0 auto;
             background-color: #ffffff;
             border: none;
             box-shadow: none;
-            padding: 64px 48px;
+            padding: 40px 32px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -543,12 +543,12 @@ export default function CarRentalManagement() {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 28px;
+            margin-bottom: 18px;
           }
           /* Make left block expand and keep title block on the right */
           .d-top > div:first-child { flex: 1; }
           .d-top > div:last-child { flex: 0 0 36%; text-align: right; }
-          .d-brand-logo { max-width: 190px; height: auto; margin-bottom: 10px; }
+          .d-brand-logo { max-width: 180px; height: auto; margin-bottom: 8px; }
           .d-brand-name {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 20px;
@@ -571,8 +571,8 @@ export default function CarRentalManagement() {
           .d-info-grid {
             display: grid;
             grid-template-columns: 1fr 220px;
-            gap: 20px;
-            margin: 28px 0 8px;
+            gap: 16px;
+            margin: 18px 0 8px;
             font-size: 13px;
             align-items: start;
           }
@@ -583,7 +583,7 @@ export default function CarRentalManagement() {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 26px;
             font-weight: 700;
-            margin: 40px 0 18px;
+            margin: 28px 0 14px;
           }
 
           .d-item-row {
@@ -638,8 +638,8 @@ export default function CarRentalManagement() {
             grid-template-columns: 1.2fr 1.4fr 0.7fr;
             gap: 20px;
             align-items: start;
-            margin-top: 54px;
-            padding-top: 28px;
+            margin-top: 40px;
+            padding-top: 20px;
             border-top: 1px solid #1a1a1a;
           }
           .d-bottom h4 {
