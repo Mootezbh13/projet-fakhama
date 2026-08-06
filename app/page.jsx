@@ -506,7 +506,7 @@ export default function CarRentalManagement() {
           body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 12px 8px; /* reduce page-side whitespace */
+            padding: 24px 12px; /* restored to match the provided model */
             background: #ffffff;
             color: #1a1a1a;
             /* Help printing engines keep exact colors/backgrounds where supported */
@@ -515,13 +515,12 @@ export default function CarRentalManagement() {
           }
           .d-container {
             position: relative;
-            /* use nearly full width with a small gutter */
-            max-width: calc(100% - 24px);
-            margin: 8px auto 6px; /* small top/bottom gutters */
+            max-width: 620px; /* restored model width */
+            margin: 0 auto;
             background-color: #ffffff;
             border: none;
             box-shadow: none;
-            padding: 20px 16px; /* reduce internal padding to shrink bottom/side space */
+            padding: 40px 32px; /* restored internal padding for the model look */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
