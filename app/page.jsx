@@ -506,7 +506,7 @@ export default function CarRentalManagement() {
           body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            padding: 24px 12px; /* restored to match the provided model */
+            padding: 0;
             background: #ffffff;
             color: #1a1a1a;
             /* Help printing engines keep exact colors/backgrounds where supported */
@@ -520,7 +520,7 @@ export default function CarRentalManagement() {
             background-color: #ffffff;
             border: none;
             box-shadow: none;
-            padding: 40px 32px; /* restored internal padding for the model look */
+            padding: 44px 24px 32px; /* réduit gauche/droite et bas suite au retour visuel */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
