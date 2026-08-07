@@ -520,7 +520,7 @@ export default function CarRentalManagement() {
             background-color: #ffffff;
             border: none;
             box-shadow: none;
-            padding: 44px 24px 32px; /* réduit gauche/droite et bas suite au retour visuel */
+            padding: 28px 16px 20px; /* encore réduit sur les 3 côtés */
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
