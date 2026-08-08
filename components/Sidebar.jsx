@@ -11,14 +11,13 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, open, onClose }) => (
     )}
     <aside className={`fixed md:sticky top-0 z-40 md:z-auto h-screen w-64 shrink-0 bg-white border-r border-gray-100 flex flex-col transition-transform duration-200
       ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-rose-600 to-amber-500 flex items-center justify-center">
-          <span className="text-white text-xs font-bold">FWE</span>
-        </div>
-        <div>
-          <p className="font-bold text-gray-900 leading-tight">Fakhama</p>
-          <p className="text-[11px] text-gray-400 leading-tight">Weddings &amp; Events</p>
-        </div>
+      <div className="flex items-center gap-2 px-5 py-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/file_00000000ed0c723080a4148ab4dc3a29.png"
+          alt="Fakhama Weddings & Events"
+          className="h-14 w-auto object-contain"
+        />
         {/* Bouton fermer visible uniquement sur mobile */}
         <button onClick={onClose} className="ml-auto text-gray-400 md:hidden text-xl leading-none">✕</button>
       </div>
@@ -57,3 +56,4 @@ const Sidebar = ({ activeTab, setActiveTab, onLogout, open, onClose }) => (
 // ── KPI CARD (nouveau) ──────────────────────────────────────────────────────────
 
 export default Sidebar;
+
